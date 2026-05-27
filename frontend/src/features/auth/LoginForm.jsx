@@ -2,9 +2,9 @@
 // Pega email + senha, chama o auth.service, e redireciona conforme o role.
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { User } from 'lucide-react'
-import { login } from '../../services/auth.service'
+import { getDashboardPath, login } from '../../services/auth.service'
 import Button from '../../components/common/Button/Button'
 import PasswordInput from './PasswordInput'
 
@@ -22,8 +22,9 @@ export default function LoginForm() {
   async function handleSubmit(e) {
     e.preventDefault() // Evita o form recarregar a página
 
-    // Validação básica
-    if (!email.trim() || !password.trim()) {
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (!normalizedEmail || !password.trim()) {
       setError('Preencha e-mail e senha.')
       return
     }
@@ -31,17 +32,12 @@ export default function LoginForm() {
     setError('')
     setLoading(true)
 
-    const result = await login(email, password)
+    const result = await login(normalizedEmail, password)
 
     setLoading(false)
 
     if (result.success) {
-      // Redireciona pra dashboard certo conforme o role
-      if (result.user.role === 'teacher') {
-        navigate('/dashboard/teacher')
-      } else {
-        navigate('/dashboard/student')
-      }
+      navigate(getDashboardPath(result.user.role))
     } else {
       // Login deu errado, mostra o erro
       setError(result.error)
@@ -57,10 +53,11 @@ export default function LoginForm() {
           size={20}
         />
         <input
-          type="text"
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Matrícula ou e-mail"
+          placeholder="E-mail"
+          autoComplete="email"
           className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
         />
       </div>
@@ -69,6 +66,7 @@ export default function LoginForm() {
       <PasswordInput
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        autoComplete="current-password"
       />
 
       {/* Mensagem de erro — só aparece se tiver erro */}
@@ -78,8 +76,15 @@ export default function LoginForm() {
 
       {/* Botão de submit */}
       <Button type="submit" variant="primary" disabled={loading}>
-        {'Entrar →'}
+        {loading ? 'Entrando...' : 'Entrar →'}
       </Button>
+
+      <p className="text-slate-400 text-sm">
+        Ainda não tem conta?{' '}
+        <Link className="text-cyan-400 hover:text-cyan-300" to="/cadastro">
+          Criar cadastro
+        </Link>
+      </p>
     </form>
   )
 }

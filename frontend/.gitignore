@@ -11,7 +11,9 @@ node_modules
 dist
 dist-ssr
 /build
-.env*
+.env
+.env.*
+!.env.example
 .DS_Store
 *.local
 

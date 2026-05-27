@@ -1,36 +1,93 @@
-// Tudo de autenticação fica aqui.
-// O LoginForm chama essas funções sem saber se é mock ou back de verdade.
+import { api } from './api'
+import {
+  clearAuthSession,
+  getAccessToken,
+  getCurrentUser,
+  getDashboardPath,
+  getRefreshToken,
+  normalizeRole,
+  saveAuthSession,
+} from './auth.storage'
 
-import { mockLogin } from '../mocks/auth.mock'
+export {
+  clearAuthSession,
+  getAccessToken,
+  getCurrentUser,
+  getDashboardPath,
+  getRefreshToken,
+  normalizeRole,
+  saveAuthSession,
+}
 
-// Login do usuário ele chama o mock, depois tem que chamar o back
-export async function login(email, password) {
-  // mock
-  const result = await mockLogin(email, password)
-
-  // Se deu certo, guarda o user no localStorage pra não perder no F5
-  if (result.success) {
-    localStorage.setItem('user', JSON.stringify(result.user))
+function createSessionPayload(data) {
+  return {
+    user: { ...data.user, role: normalizeRole(data.user?.role) },
+    accessToken: data.tokens?.accessToken,
+    refreshToken: data.tokens?.refreshToken,
   }
-
-  return result
 }
 
-// Logout
-export function logout() {
-  localStorage.removeItem('user')
-}
-
-// Pega o user logado do localStorage. Retorna null se ninguém tá logado.
-export function getCurrentUser() {
-  const userJson = localStorage.getItem('user')
-  if (!userJson) return null
-
+export async function login(email, password) {
   try {
-    return JSON.parse(userJson)
+    const { data } = await api.post('/auth/login', {
+      email: email.trim().toLowerCase(),
+      password,
+    })
+    const payload = createSessionPayload(data)
+
+    saveAuthSession(payload)
+    return { success: true, ...payload }
+  } catch (error) {
+    const message = error?.response?.data?.error ?? 'Não foi possível fazer login.'
+    return { success: false, error: message }
+  }
+}
+
+export async function register({ name, email, password, role }) {
+  try {
+    const { data } = await api.post('/auth/register', {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      role: normalizeRole(role),
+    })
+    const payload = createSessionPayload(data)
+
+    saveAuthSession(payload)
+    return { success: true, ...payload }
+  } catch (error) {
+    const message = error?.response?.data?.error ?? 'Não foi possível fazer cadastro.'
+    return { success: false, error: message }
+  }
+}
+
+export async function logout() {
+  try {
+    const refreshToken = getRefreshToken()
+
+    if (refreshToken) {
+      await api.post('/auth/logout', { refreshToken })
+    }
   } catch {
-    // Se o JSON quebrou, limpa e finge que ninguém tá logado
-    localStorage.removeItem('user')
-    return null
+    // Ignora erro de rede/logout, mas limpa sessão local.
+  } finally {
+    clearAuthSession()
+  }
+}
+
+export async function validateSession() {
+  try {
+    const { data } = await api.get('/auth/me')
+    const accessToken = getAccessToken()
+    const refreshToken = getRefreshToken()
+
+    if (accessToken && refreshToken) {
+      saveAuthSession({ user: data.user, accessToken, refreshToken })
+    }
+
+    return { success: true, user: { ...data.user, role: normalizeRole(data.user?.role) } }
+  } catch {
+    clearAuthSession()
+    return { success: false }
   }
 }
