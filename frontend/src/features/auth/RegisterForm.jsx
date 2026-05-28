@@ -1,0 +1,114 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User } from 'lucide-react'
+import Button from '../../components/common/Button/Button'
+import PasswordInput from './PasswordInput'
+import { getDashboardPath, register } from '../../services/auth.service'
+
+export default function RegisterForm() {
+  const navigate = useNavigate()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState('aluno')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+
+    const normalizedName = name.trim()
+    const normalizedEmail = email.trim().toLowerCase()
+
+    if (!normalizedName || !normalizedEmail || !password.trim()) {
+      setError('Preencha nome, e-mail e senha.')
+      return
+    }
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setError('As senhas não conferem.')
+      return
+    }
+
+    setError('')
+    setLoading(true)
+    const result = await register({
+      name: normalizedName,
+      email: normalizedEmail,
+      password,
+      role,
+    })
+    setLoading(false)
+
+    if (!result.success) {
+      setError(result.error)
+      return
+    }
+
+    navigate(getDashboardPath(result.user.role))
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+      <div className="relative">
+        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nome completo"
+          autoComplete="name"
+          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+        />
+      </div>
+
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="E-mail"
+        autoComplete="email"
+        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+      />
+
+      <select
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        className="w-full bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-cyan-400"
+      >
+        <option value="aluno">Aluno</option>
+        <option value="professor">Professor</option>
+      </select>
+
+      <PasswordInput
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        autoComplete="new-password"
+      />
+
+      <PasswordInput
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        placeholder="Confirmar senha"
+        autoComplete="new-password"
+      />
+
+      {error && <p className="text-red-400 text-sm">{error}</p>}
+
+      <Button type="submit" variant="primary" disabled={loading}>
+        {loading ? 'Cadastrando...' : 'Criar conta →'}
+      </Button>
+
+      <p className="text-slate-400 text-sm">
+        Já tem conta?{' '}
+        <Link className="text-cyan-400 hover:text-cyan-300" to="/login">
+          Ir para login
+        </Link>
+      </p>
+    </form>
+  )
+}

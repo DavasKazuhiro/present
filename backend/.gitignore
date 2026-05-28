@@ -11,7 +11,12 @@ node_modules
 dist
 dist-ssr
 /build
-.env*
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
 .DS_Store
 *.local
 

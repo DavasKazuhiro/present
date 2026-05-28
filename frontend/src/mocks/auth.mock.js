@@ -27,8 +27,8 @@ export function mockLogin(email, password) {
       )
 
       if (user) {
-        // Tira o password antes de devolver — back nunca manda senha de volta
-        const { password: _, ...userSemSenha } = user
+        const userSemSenha = { ...user }
+        delete userSemSenha.password
         resolve({ success: true, user: userSemSenha })
       } else {
         resolve({ success: false, error: 'E-mail ou senha incorretos.' })

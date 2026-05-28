@@ -125,19 +125,40 @@ cd present
 
 ---
 
-### Instale as dependências
+### Configure o backend
 
 ```bash
+cd backend
+cp .env.example .env
 npm install
 ```
 
+Edite o arquivo `backend/.env` com os dados do seu MySQL local. Não envie o `.env` real para o Git.
+
 ---
 
-### Execute o projeto
+### Execute o backend
 
 ```bash
-npm start
+npm run start
 ```
+
+O backend roda por padrão em `http://localhost:8800`.
+
+---
+
+### Configure e execute o frontend
+
+Em outro terminal:
+
+```bash
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+O frontend usa `VITE_API_URL=http://localhost:8800` por padrão.
 
 ---
 
