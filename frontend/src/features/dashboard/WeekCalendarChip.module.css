@@ -1,0 +1,30 @@
+.chip {
+  border-radius: var(--radius-sm);
+  padding: 2px 5px;
+  font-size: 9px;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.em_curso {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.encerrada {
+  background: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+}
+
+.programada {
+  background: #bfdbfe;
+  color: #1e40af;
+}
+
+.nao_definida {
+  background: var(--color-gray-100);
+  color: var(--color-text-muted);
+  border: 0.5px dashed var(--color-border);
+}

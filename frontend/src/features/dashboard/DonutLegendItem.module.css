@@ -1,0 +1,41 @@
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-primary);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: 12px;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.valor {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.pct {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
