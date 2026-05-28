@@ -1,0 +1,40 @@
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6) 0;
+}
+
+.date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.greeting {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.bellBtn {
+  background: var(--color-bg-card);
+  border: 0.5px solid var(--color-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  transition: background 0.15s;
+}
+
+.bellBtn:hover {
+  background: var(--color-gray-100);
+}

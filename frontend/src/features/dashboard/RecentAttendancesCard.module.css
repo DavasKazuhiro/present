@@ -1,0 +1,21 @@
+.card {
+  background: var(--color-bg-card);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.header {
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
