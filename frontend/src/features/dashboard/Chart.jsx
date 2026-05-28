@@ -16,19 +16,23 @@ export function Chart({ categorias = [], totalAlunos }) {
   const data = categorias.map(c => ({ name: c.label, value: c.valor, cor: c.cor }))
 
   return (
-    <div className={styles.wrap}>
-      <ResponsiveContainer width={160} height={160}>
+    <div
+      className={styles.wrap}
+      role="img"
+      aria-label={`Gráfico de distribuição de presença com ${totalAlunos} alunos no total`}
+    >
+      <ResponsiveContainer width={178} height={178}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={52}
-            outerRadius={76}
+            innerRadius={58}
+            outerRadius={84}
             dataKey="value"
             strokeWidth={0}
             animationBegin={0}
-            animationDuration={800}
+            animationDuration={650}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.cor} />
@@ -39,8 +43,9 @@ export function Chart({ categorias = [], totalAlunos }) {
       </ResponsiveContainer>
 
       <div className={styles.center} aria-hidden="true">
-        <span className={styles.centerLabel}>Total alunos</span>
+        <span className={styles.centerLabel}>Total</span>
         <span className={styles.centerValue}>{totalAlunos}</span>
+        <span className={styles.centerSub}>alunos</span>
       </div>
     </div>
   )

@@ -1,57 +1,73 @@
 .card {
-  background: var(--color-bg-card);
-  border: 0.5px solid var(--color-border);
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+  padding: 20px 22px;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  cursor: default;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.09);
+  transform: translateY(-1px);
 }
 
 .iconWrap {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .iconDark {
-  background: var(--color-sidebar-bg);
-  color: var(--color-sidebar-accent);
+  background: var(--color-surface-800);
+  color: var(--color-primary-300);
 }
 
 .iconLight {
-  background: var(--color-gray-100);
-  color: var(--color-text-secondary);
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-neutral-500);
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
 }
 
 .value {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--color-text-primary);
-  line-height: 1.1;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  display: block;
 }
 
 .label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-neutral-500);
+  display: block;
 }
 
 .delta {
-  font-size: var(--font-size-xs);
-  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 1px;
+  display: block;
 }
 
-.positive { color: var(--color-success); }
-.negative { color: var(--color-danger); }
-.neutral  { color: var(--color-text-muted); }
+.positive { color: var(--color-success-600); }
+.negative { color: var(--color-danger-600); }
+.neutral  { color: var(--color-neutral-400); }

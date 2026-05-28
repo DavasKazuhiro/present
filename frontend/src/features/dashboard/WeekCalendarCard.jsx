@@ -12,16 +12,21 @@ export function WeekCalendarCard({ eventos = [], diaAtual = 3 }) {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Esta semana</h2>
-        <span className={styles.range}>04 — 10 Mai →</span>
+        <h2 className={styles.title}>Agenda semanal</h2>
+
+        <span className={styles.range} aria-label="Período exibido: 04 a 10 de maio">
+          04 — 10 Mai
+          <i className="ti ti-chevron-right" aria-hidden="true" />
+        </span>
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.grid} role="table" aria-label="Calendário de aulas da semana">
         <div className={styles.timeGutter} />
         {DIAS.map((dia, i) => (
           <div
             key={dia}
             className={`${styles.dayHeader} ${i === diaAtual ? styles.today : ''}`}
+            role="columnheader"
           >
             <span className={styles.dayName}>{dia}</span>
             <span className={styles.dayNum}>{DATAS[i]}</span>
@@ -29,23 +34,23 @@ export function WeekCalendarCard({ eventos = [], diaAtual = 3 }) {
         ))}
 
         {HORAS.map(hora => (
-          <>
-            <div key={`h-${hora}`} className={styles.timeLabel}>{hora}</div>
+          <div className={styles.rowGroup} key={hora} role="row">
+            <div className={styles.timeLabel}>{hora}</div>
             {DIAS.map((_, diaIdx) => {
               const evento = getEvento(diaIdx, hora)
               return (
-                <div key={`${diaIdx}-${hora}`} className={styles.cell}>
+                <div key={`${diaIdx}-${hora}`} className={styles.cell} role="cell">
                   {evento && (
                     <WeekCalendarChip label={evento.label} status={evento.status} />
                   )}
                 </div>
               )
             })}
-          </>
+          </div>
         ))}
       </div>
 
-      <div className={styles.legend}>
+      <div className={styles.legend} aria-label="Legenda dos status da semana">
         <div className={styles.legendItem}>
           <span className={`${styles.dot} ${styles.dotProg}`} />
           Programada

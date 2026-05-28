@@ -1,110 +1,158 @@
+/* Reset de base */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Layout raiz */
 .layout {
   display: flex;
   height: 100vh;
-  background: var(--color-bg-page);
+  width: 100%;
+  overflow: hidden;
+  background: #F0F2F0;
   font-family: var(--font-sans);
   color: var(--color-text-primary);
 }
 
+/* Coluna de conteúdo */
 .main {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  scrollbar-width: thin;
+  scrollbar-color: #D4D4D4 transparent;
 }
 
+.main::-webkit-scrollbar       { width: 6px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: #D4D4D4; border-radius: 99px; }
+
+/* Área de conteúdo com padding uniforme */
 .content {
-  padding: var(--space-5) var(--space-6);
+  padding: 24px 28px 40px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: 16px;
 }
 
-/* Métricas */
+/* ── Seção: título de seção opcional ── */
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-neutral-400);
+  margin-bottom: -4px;
+}
+
+/* ── Row 1: Métricas ── */
 .metricsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
-/* Aulas + Calendário */
+/* ── Row 2: Aulas de hoje + Calendário ── */
 .midRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 14px;
+  align-items: stretch;
 }
 
-/* Indicadores */
+/* ── Row 3: Indicadores úteis ── */
 .indicadoresRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
+/* Card de indicador */
 .indCard {
-  background: var(--color-bg-card);
-  border: 0.5px solid var(--color-border);
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+  padding: 20px 22px;
   display: flex;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.indCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
 .indIcon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
-  background: var(--color-gray-100);
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-border-default);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   font-size: 20px;
-  color: var(--color-text-secondary);
+  color: var(--color-neutral-500);
+}
+
+.indBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .indLabel {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  margin-bottom: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-neutral-500);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
 .indValue {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-neutral-900);
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .indSub {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-neutral-400);
+  margin-top: 1px;
 }
 
 .indBadge {
-  display: inline-block;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: var(--radius-full);
-  padding: 1px 6px;
-  margin-top: 4px;
-  font-weight: 500;
+  padding: 2px 8px;
+  margin-top: 6px;
+  width: fit-content;
 }
 
 .indBadge.positive {
-  background: var(--color-success-bg);
-  color: var(--color-success-text);
+  background: var(--color-success-50);
+  color: var(--color-success-600);
 }
 
 .indBadge.warning {
-  background: var(--color-warning-bg);
-  color: var(--color-warning-text);
+  background: var(--color-danger-50);
+  color: var(--color-danger-600);
 }
 
-/* Últimas chamadas + Donut */
+/* ── Row 4: Últimas chamadas + Donut ── */
 .bottomRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+  align-items: stretch;
 }

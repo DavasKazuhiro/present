@@ -2,57 +2,97 @@
   background: var(--color-bg-card);
   border: 0.5px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-5);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-card);
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-4);
+  gap: var(--space-4);
+  margin-bottom: 14px;
 }
 
+
 .title {
-  font-size: var(--font-size-base);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-neutral-800, var(--color-text-primary));
+  letter-spacing: 0.01em;
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .exportBtn {
-  background: var(--color-sidebar-bg);
-  color: var(--color-text-inverse);
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 6px 12px;
-  font-size: var(--font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--color-neutral-800, var(--color-text-primary));
+  border: 0;
+  border-radius: var(--radius-full);
+  padding: 4px 6px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .exportBtn:hover {
-  opacity: 0.85;
+  background: var(--color-gray-100);
+  color: var(--color-text-primary);
+}
+
+.exportBtn:focus-visible {
+  outline: 2px solid var(--color-success);
+  outline-offset: 2px;
 }
 
 .mes {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-gray-100);
+  color: var(--color-neutral-800, var(--color-text-primary));
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.highlight {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 16px;
+  color: var(--color-neutral-800, var(--color-text-primary));
+}
+
+.highlightValue {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-align: right;
 }
 
 .body {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 28px;
 }
 
 .legend {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;

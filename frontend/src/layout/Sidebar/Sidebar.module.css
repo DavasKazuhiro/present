@@ -1,60 +1,124 @@
 .sidebar {
-  width: 200px;
-  min-width: 200px;
-  background: var(--color-sidebar-bg);
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: var(--color-surface-800);
   display: flex;
   flex-direction: column;
-  padding: var(--space-6) var(--space-4);
-  gap: var(--space-2);
+  padding: 28px 16px 24px;
+  gap: 2px;
+  overflow: hidden;
+  position: relative;
 }
 
+/* Sutil borda direita para separar do conteúdo */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent);
+}
+
+/* Logo */
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
   color: #fff;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
-  margin-bottom: var(--space-6);
-  padding-left: var(--space-1);
+  margin-bottom: 32px;
+  padding: 0 8px;
+  letter-spacing: -0.01em;
 }
 
+/* Grupo de nav */
 .nav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
 }
 
+/* Label de grupo */
+.navGroup {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  padding: 12px 12px 4px;
+}
+
+/* Item de nav */
 .navItem {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
   border-radius: var(--radius-md);
-  color: var(--color-sidebar-text);
-  font-size: var(--font-size-base);
+  color: var(--color-primary-200);
+  font-size: 13.5px;
+  font-weight: 400;
   background: none;
   border: none;
   cursor: pointer;
   width: 100%;
   text-align: left;
   transition: background 0.15s, color 0.15s;
+  position: relative;
 }
 
 .navItem i {
-  font-size: 18px;
+  font-size: 17px;
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .navItem:hover {
-  background: var(--color-sidebar-hover-bg);
+  background: rgba(255,255,255,0.07);
   color: #e2f0e8;
 }
 
-.navItem.active {
-  background: var(--color-sidebar-active-bg);
-  color: var(--color-sidebar-active);
+.navItem:hover i {
+  opacity: 1;
 }
 
+.navItem.active {
+  background: rgba(255,255,255,0.11);
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.navItem.active i {
+  opacity: 1;
+  color: var(--color-primary-300);
+}
+
+/* Indicador de ativo */
+.navItem.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: var(--color-primary-400);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Espaçador */
 .spacer {
   flex: 1;
+  min-height: 24px;
+}
+
+/* Divisor antes de configurações */
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 8px 12px;
 }
