@@ -7,8 +7,8 @@ const baseClasses =
 
 // Classes específicas de cada variante
 const variantClasses = {
-  primary: 'bg-cyan-400 text-slate-900 hover:bg-cyan-300',
-  secondary: 'bg-slate-900 text-white hover:bg-slate-800',
+  primary: 'bg-primary-300 text-white hover:bg-primary-400',
+  secondary: 'bg-primary-900 text-white hover:bg-primary-800',
   ghost: 'bg-transparent text-slate-700 hover:text-slate-900',
 }
 

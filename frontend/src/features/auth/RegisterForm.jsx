@@ -62,7 +62,7 @@ export default function RegisterForm() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome completo"
           autoComplete="name"
-          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
         />
       </div>
 
@@ -72,13 +72,13 @@ export default function RegisterForm() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="E-mail"
         autoComplete="email"
-        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 px-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
       />
 
       <select
         value={role}
         onChange={(e) => setRole(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-cyan-400"
+        className="w-full bg-white border border-slate-700 rounded-lg py-3 px-4 text-slate-700 focus:outline-none focus:border-primary-400"
       >
         <option value="aluno">Aluno</option>
         <option value="professor">Professor</option>
@@ -100,12 +100,12 @@ export default function RegisterForm() {
       {error && <p className="text-red-400 text-sm">{error}</p>}
 
       <Button type="submit" variant="primary" disabled={loading}>
-        {loading ? 'Cadastrando...' : 'Criar conta →'}
+        {loading ? 'Cadastrando...' : 'Criar conta'}
       </Button>
 
       <p className="text-slate-400 text-sm">
         Já tem conta?{' '}
-        <Link className="text-cyan-400 hover:text-cyan-300" to="/login">
+        <Link className="text-primary-400 hover:text-primary-300" to="/login">
           Ir para login
         </Link>
       </p>

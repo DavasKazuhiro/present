@@ -58,7 +58,7 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="E-mail"
           autoComplete="email"
-          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
         />
       </div>
 
@@ -76,12 +76,12 @@ export default function LoginForm() {
 
       {/* Botão de submit */}
       <Button type="submit" variant="primary" disabled={loading}>
-        {loading ? 'Entrando...' : 'Entrar →'}
+        {loading ? 'Entrando...' : 'Entrar'}
       </Button>
 
       <p className="text-slate-400 text-sm">
         Ainda não tem conta?{' '}
-        <Link className="text-cyan-400 hover:text-cyan-300" to="/cadastro">
+        <Link className="text-primary-500 hover:text-primary-300" to="/cadastro">
           Criar cadastro
         </Link>
       </p>

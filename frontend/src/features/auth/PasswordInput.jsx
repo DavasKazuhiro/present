@@ -21,7 +21,7 @@ export default function PasswordInput({ value, onChange, placeholder = 'Senha', 
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-12 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-12 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
         {...rest}
       />
 
@@ -29,7 +29,7 @@ export default function PasswordInput({ value, onChange, placeholder = 'Senha', 
       <button
         type="button"
         onClick={() => setShowPassword(!showPassword)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-400 cursor-pointer"
         aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
       >
         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
