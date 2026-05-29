@@ -61,7 +61,7 @@ export function TeacherDashboardPage() {
           {/* Métricas do topo */}
           <section className={styles.metricsRow} aria-label="Métricas gerais">
             <MetricCard
-              icon="books"
+              icon="book"
               value={mockMetrics.aulasHoje}
               label="Aulas hoje"
               darkIcon
@@ -70,7 +70,7 @@ export function TeacherDashboardPage() {
               icon="chart-line"
               value={`${mockMetrics.frequenciaMedia}%`}
               label="Frequência média"
-              delta={`▲ ${mockMetrics.frequenciaMediaDelta}% vs sem. anterior`}
+              // delta={`▲ ${mockMetrics.frequenciaMediaDelta}% vs sem. anterior`}
               deltaType="positive"
               darkIcon
             />
@@ -78,6 +78,7 @@ export function TeacherDashboardPage() {
               icon="clipboard-check"
               value={mockMetrics.chamadasMes}
               label="Chamadas mês"
+              darkIcon
             />
           </section>
 
@@ -94,7 +95,7 @@ export function TeacherDashboardPage() {
           </section>
 
           {/* Indicadores úteis */}
-          <section className={styles.indicadoresRow} aria-label="Indicadores úteis">
+          {/* <section className={styles.indicadoresRow} aria-label="Indicadores úteis">
             <div className={styles.indCard}>
               <div className={styles.indIcon}>
                 <i className="ti ti-users" aria-hidden="true" />
@@ -142,7 +143,7 @@ export function TeacherDashboardPage() {
                 </span>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* Últimas chamadas + Distribuição de presença */}
           <section className={styles.bottomRow} aria-label="Chamadas e presença">

@@ -14,14 +14,14 @@ const BOTTOM_ITEMS = [
 function PresentLogo() {
   return (
     <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="5.5" stroke="#7ecba1" strokeWidth="2"/>
+      <circle cx="16" cy="16" r="5.5" stroke="var(--color-primary-600)" strokeWidth="2"/>
       {[0,45,90,135,180,225,270,315].map((deg, i) => {
         const rad = (deg * Math.PI) / 180
         const x1 = 16 + 10 * Math.sin(rad)
         const y1 = 16 - 10 * Math.cos(rad)
         const x2 = 16 + 14 * Math.sin(rad)
         const y2 = 16 - 14 * Math.cos(rad)
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#7ecba1" strokeWidth="2" strokeLinecap="round"/>
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-primary-400)" strokeWidth="2" strokeLinecap="round"/>
       })}
     </svg>
   )

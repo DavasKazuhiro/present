@@ -29,7 +29,7 @@
 
 .iconDark {
   background: var(--color-surface-800);
-  color: var(--color-primary-300);
+  color: var(--color-neutral-0);
 }
 
 .iconLight {
