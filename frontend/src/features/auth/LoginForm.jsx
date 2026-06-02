@@ -3,7 +3,6 @@
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User } from 'lucide-react'
 import { getDashboardPath, login } from '../../services/auth.service'
 import Button from '../../components/common/Button/Button'
 import PasswordInput from './PasswordInput'
@@ -11,16 +10,13 @@ import PasswordInput from './PasswordInput'
 export default function LoginForm() {
   const navigate = useNavigate()
 
-  // Estados dos campos
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-
-  // Estados da UI
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
-    e.preventDefault() // Evita o form recarregar a página
+    e.preventDefault()
 
     const normalizedEmail = email.trim().toLowerCase()
 
@@ -39,18 +35,18 @@ export default function LoginForm() {
     if (result.success) {
       navigate(getDashboardPath(result.user.role))
     } else {
-      // Login deu errado, mostra o erro
       setError(result.error)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-      {/* Campo de email/matrícula */}
+      {/* campo de email */}
       <div className="relative">
-        <User
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          size={20}
+        <i
+          className="ti ti-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+          style={{ fontSize: 20 }}
+          aria-hidden="true"
         />
         <input
           type="email"
@@ -58,28 +54,25 @@ export default function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="E-mail"
           autoComplete="email"
-          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
+          className="w-full bg-transparent border border-neutral-200 rounded-lg py-3 pl-12 pr-4 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-primary-400"
         />
       </div>
 
-      {/* Campo de senha (componente já feito) */}
       <PasswordInput
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         autoComplete="current-password"
       />
 
-      {/* Mensagem de erro — só aparece se tiver erro */}
       {error && (
-        <p className="text-red-400 text-sm">{error}</p>
+        <p className="text-danger-400 text-sm" role="alert">{error}</p>
       )}
 
-      {/* Botão de submit */}
       <Button type="submit" variant="primary" disabled={loading}>
         {loading ? 'Entrando...' : 'Entrar'}
       </Button>
 
-      <p className="text-slate-400 text-sm">
+      <p className="text-neutral-400 text-sm">
         Ainda não tem conta?{' '}
         <Link className="text-primary-500 hover:text-primary-300" to="/cadastro">
           Criar cadastro

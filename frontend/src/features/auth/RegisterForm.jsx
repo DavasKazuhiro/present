@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User } from 'lucide-react'
 import Button from '../../components/common/Button/Button'
 import PasswordInput from './PasswordInput'
 import { getDashboardPath, register } from '../../services/auth.service'
@@ -55,14 +54,18 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
       <div className="relative">
-        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <i
+          className="ti ti-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+          style={{ fontSize: 20 }}
+          aria-hidden="true"
+        />
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome completo"
           autoComplete="name"
-          className="w-full bg-transparent border border-slate-700 rounded-lg py-3 pl-12 pr-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
+          className="w-full bg-transparent border border-neutral-200 rounded-lg py-3 pl-12 pr-4 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-primary-400"
         />
       </div>
 
@@ -72,13 +75,13 @@ export default function RegisterForm() {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="E-mail"
         autoComplete="email"
-        className="w-full bg-transparent border border-slate-700 rounded-lg py-3 px-4 text-slate-700 placeholder-slate-500 focus:outline-none focus:border-primary-400"
+        className="w-full bg-transparent border border-neutral-200 rounded-lg py-3 px-4 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-primary-400"
       />
 
       <select
         value={role}
         onChange={(e) => setRole(e.target.value)}
-        className="w-full bg-white border border-slate-700 rounded-lg py-3 px-4 text-slate-700 focus:outline-none focus:border-primary-400"
+        className="w-full bg-white border border-neutral-200 rounded-lg py-3 px-4 text-neutral-700 focus:outline-none focus:border-primary-400"
       >
         <option value="aluno">Aluno</option>
         <option value="professor">Professor</option>
@@ -97,13 +100,13 @@ export default function RegisterForm() {
         autoComplete="new-password"
       />
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-danger-400 text-sm" role="alert">{error}</p>}
 
       <Button type="submit" variant="primary" disabled={loading}>
         {loading ? 'Cadastrando...' : 'Criar conta'}
       </Button>
 
-      <p className="text-slate-400 text-sm">
+      <p className="text-neutral-400 text-sm">
         Já tem conta?{' '}
         <Link className="text-primary-400 hover:text-primary-300" to="/login">
           Ir para login

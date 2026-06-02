@@ -61,10 +61,35 @@
   --color-success-600: #1A7055;
   --color-success-900: #0A3829;
 
+  /* Aliases de status sem sufixo (o dashboard usa esses nomes mais curtos) */
+  --color-success:      var(--color-success-400);
+  --color-success-bg:   var(--color-success-50);
+  --color-success-text: var(--color-success-900);
+
+  --color-warning:      var(--color-warning-400);
+  --color-warning-bg:   var(--color-warning-50);
+  --color-warning-text: var(--color-warning-900);
+
+  --color-danger:       var(--color-danger-400);
+  --color-danger-bg:    var(--color-danger-50);
+  --color-danger-text:  var(--color-danger-900);
+
+  --color-info:         var(--color-info-400);
+  --color-info-bg:      var(--color-info-50);
+  --color-info-text:    var(--color-info-900);
+
   /* Gráfico — Em Observação (ciano) */
   --color-chart-cyan-50:  #E8F8FB;
   --color-chart-cyan-400: #4BBFD4;
   --color-chart-cyan-600: #2894A8;
+
+  /* Gray — alias pro dashboard que usa essa escala (vem do tokens.css antigo) */
+  --color-gray-50:  #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-400: #9ca3af;
+  --color-gray-600: #4b5563;
+  --color-gray-900: #111827;
 
   /* ─────────────────────────────────────────
      Aliases semânticos
@@ -85,9 +110,19 @@
   --color-text-on-dark-muted: var(--color-primary-200);
   --color-text-brand:     var(--color-primary-700);
 
+  /* Sidebar (cores do menu lateral escuro) */
+  --color-sidebar-bg:       var(--color-surface-800);
+  --color-sidebar-text:     #9ab8aa;
+  --color-sidebar-active:   #ffffff;
+  --color-sidebar-hover-bg: rgba(255, 255, 255, 0.07);
+  --color-sidebar-active-bg:rgba(255, 255, 255, 0.12);
+  --color-sidebar-accent:   #7ecba1;
+
   /* Bordas */
   --color-border-default: var(--color-neutral-100);
   --color-border-strong:  var(--color-neutral-200);
+  --color-border:         var(--color-gray-200);
+  --color-border-muted:   rgba(0, 0, 0, 0.08);
 
   /* Ações */
   --color-action-primary:       var(--color-primary-600);
@@ -99,6 +134,15 @@
   ───────────────────────────────────────── */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Tamanhos de fonte (usados nos CSS Modules do dashboard) */
+  --font-size-xs:   11px;
+  --font-size-sm:   12px;
+  --font-size-base: 14px;
+  --font-size-md:   16px;
+  --font-size-lg:   20px;
+  --font-size-xl:   24px;
+  --font-size-2xl:  28px;
 
   /* ─────────────────────────────────────────
      Border Radius
@@ -122,4 +166,13 @@
   ───────────────────────────────────────── */
   --spacing-sidebar: 220px;
   --spacing-header: 64px;
+
+  /* Escala de espaçamento (usada nos CSS Modules do dashboard) */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
 }

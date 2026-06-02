@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Sidebar } from '../layout/Sidebar/Sidebar'
+import { AppLayout } from '../layout/AppLayout/AppLayout'
+import { Footer } from '../layout/Footer/Footer'
 import { DashboardHeader } from '../features/dashboard/DashboardHeader'
 import { MetricCard } from '../features/dashboard/MetricCard'
 import { TodayClassesCard } from '../features/dashboard/TodayClassesCard'
@@ -12,12 +12,9 @@ import {
   mockMetrics,
   mockAulasHoje,
   mockWeekCalendar,
-  mockIndicadores,
   mockUltimasChamadas,
   mockDistribuicaoPresenca,
 } from '../mocks/dashboard.mock'
-
-import styles from './TeacherDashboardPage.module.css'
 
 function formatDataHora() {
   const agora = new Date()
@@ -29,136 +26,55 @@ function formatDataHora() {
 }
 
 export function TeacherDashboardPage() {
-  const [activeRoute, setActiveRoute] = useState('dashboard')
-
   const handleAulaAction = (aula) => {
     console.log('Ação na aula:', aula)
-    // TODO: navegar para tela de chamada ativa quando existir
   }
 
   const handleChamadaMenu = (chamada) => {
     console.log('Menu da chamada:', chamada)
-    // TODO: abrir menu de opções
   }
 
   const handleExportChart = () => {
     console.log('Exportar gráfico')
-    // TODO: integrar exportação quando back estiver pronto
   }
 
   return (
-    <div className={styles.layout}>
-      <Sidebar activeRoute={activeRoute} onNavigate={setActiveRoute} />
+    <AppLayout>
+      <DashboardHeader
+        professorName={mockTeacherProfile.name}
+        dataHora={formatDataHora()}
+        onNotification={() => console.log('Notificações')}
+      />
 
-      <main className={styles.main}>
-        <DashboardHeader
-          professorName={mockTeacherProfile.name}
-          dataHora={formatDataHora()}
-          onNotification={() => console.log('Notificações')}
-        />
+      <div className="px-7 max-sm:px-4 py-6 pb-10 flex flex-col gap-4">
+        {/* métricas — 3 colunas no desktop, 1 no mobile */}
+        <section className="grid grid-cols-3 max-lg:grid-cols-1 gap-3.5" aria-label="Métricas gerais">
+          <MetricCard icon="book" value={mockMetrics.aulasHoje} label="Aulas hoje" darkIcon />
+          <MetricCard
+            icon="chart-line"
+            value={`${mockMetrics.frequenciaMedia}%`}
+            label="Frequência média"
+            deltaType="positive"
+            darkIcon
+          />
+          <MetricCard icon="clipboard-check" value={mockMetrics.chamadasMes} label="Chamadas mês" darkIcon />
+        </section>
 
-        <div className={styles.content}>
-          {/* Métricas do topo */}
-          <section className={styles.metricsRow} aria-label="Métricas gerais">
-            <MetricCard
-              icon="book"
-              value={mockMetrics.aulasHoje}
-              label="Aulas hoje"
-              darkIcon
-            />
-            <MetricCard
-              icon="chart-line"
-              value={`${mockMetrics.frequenciaMedia}%`}
-              label="Frequência média"
-              // delta={`▲ ${mockMetrics.frequenciaMediaDelta}% vs sem. anterior`}
-              deltaType="positive"
-              darkIcon
-            />
-            <MetricCard
-              icon="clipboard-check"
-              value={mockMetrics.chamadasMes}
-              label="Chamadas mês"
-              darkIcon
-            />
-          </section>
+        {/* aulas de hoje + calendário — 2 colunas no desktop, empilhado no mobile */}
+        <section className="grid grid-cols-[1.1fr_0.9fr] max-lg:grid-cols-1 gap-3.5 items-stretch" aria-label="Agenda">
+          <TodayClassesCard aulas={mockAulasHoje} onAction={handleAulaAction} />
+          <WeekCalendarCard eventos={mockWeekCalendar} diaAtual={3} />
+        </section>
 
-          {/* Aulas de hoje + Calendário semanal */}
-          <section className={styles.midRow} aria-label="Agenda">
-            <TodayClassesCard
-              aulas={mockAulasHoje}
-              onAction={handleAulaAction}
-            />
-            <WeekCalendarCard
-              eventos={mockWeekCalendar}
-              diaAtual={3}
-            />
-          </section>
+        {/* últimas chamadas + distribuição — 2 colunas no desktop, empilhado no mobile */}
+        <section className="grid grid-cols-2 max-lg:grid-cols-1 gap-3.5 items-stretch" aria-label="Chamadas e presença">
+          <RecentAttendancesCard chamadas={mockUltimasChamadas} onMenu={handleChamadaMenu} />
+          <AttendanceDistributionCard dados={mockDistribuicaoPresenca} onExport={handleExportChart} />
+        </section>
+      </div>
 
-          {/* Indicadores úteis */}
-          {/* <section className={styles.indicadoresRow} aria-label="Indicadores úteis">
-            <div className={styles.indCard}>
-              <div className={styles.indIcon}>
-                <i className="ti ti-users" aria-hidden="true" />
-              </div>
-              <div>
-                <p className={styles.indLabel}>Total de alunos ativos</p>
-                <p className={styles.indValue}>{mockIndicadores.totalAlunos}</p>
-                <p className={styles.indSub}>em {mockIndicadores.totalTurmas} turmas</p>
-                <span className={`${styles.indBadge} ${styles.positive}`}>
-                  + {mockIndicadores.alunosNovosDelta}
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.indCard}>
-              <div className={styles.indIcon}>
-                <i className="ti ti-calendar-event" aria-hidden="true" />
-              </div>
-              <div>
-                <p className={styles.indLabel}>Próximos eventos</p>
-                <p className={styles.indValue}>{mockIndicadores.proximosEventos}</p>
-                <p className={styles.indSub}>
-                  {mockIndicadores.proximasAulas} aulas · {mockIndicadores.proximasProvas} provas
-                </p>
-                <span className={`${styles.indBadge} ${styles.positive}`}>
-                  + {mockIndicadores.eventosDelta}%
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.indCard}>
-              <div className={styles.indIcon}>
-                <i className="ti ti-alert-triangle" aria-hidden="true" />
-              </div>
-              <div>
-                <p className={styles.indLabel}>Alunos em risco</p>
-                <p className={styles.indValue}>
-                  {String(mockIndicadores.alunosEmRisco).padStart(2, '0')}
-                </p>
-                <p className={styles.indSub}>
-                  abaixo de {mockIndicadores.limiteRisco}%
-                </p>
-                <span className={`${styles.indBadge} ${styles.warning}`}>
-                  + {mockIndicadores.alunosEmRiscoDelta}
-                </span>
-              </div>
-            </div>
-          </section> */}
-
-          {/* Últimas chamadas + Distribuição de presença */}
-          <section className={styles.bottomRow} aria-label="Chamadas e presença">
-            <RecentAttendancesCard
-              chamadas={mockUltimasChamadas}
-              onMenu={handleChamadaMenu}
-            />
-            <AttendanceDistributionCard
-              dados={mockDistribuicaoPresenca}
-              onExport={handleExportChart}
-            />
-          </section>
-        </div>
-      </main>
-    </div>
+      <Footer />
+    </AppLayout>
   )
 }
 
