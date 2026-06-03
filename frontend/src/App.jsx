@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import TeacherDashboardPage from './pages/TeacherDashboardPage'
-import StudentDashboardPage from './pages/StudentDashboardPage'
+import StudentTurmas from './pages/StudentTurmas'
 import { getCurrentUser, getDashboardPath, validateSession } from './services/auth.service'
 
 function ProtectedRoute({ allowedRoles, children }) {
@@ -87,7 +87,7 @@ export default function App() {
         path="/dashboard/student"
         element={
           <ProtectedRoute allowedRoles={['aluno']}>
-            <StudentDashboardPage />
+            <StudentTurmas />
           </ProtectedRoute>
         }
       />
