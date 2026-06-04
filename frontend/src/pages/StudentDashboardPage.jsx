@@ -10,7 +10,7 @@ export default function StudentDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6 text-white">
+    <div className="min-h-screen bg-surface-900 p-6 text-white">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Dashboard Aluno</h1>
         <button

@@ -1,12 +1,17 @@
+// Botão de ícone — recebe o nome do ícone do Tabler (sem o "ti ti-")
+// ex: <IconButton icon="bell" onClick={...} />
 
-export function IconButton({ children, variant = "solid", className = "", ...rest }) {
-  const base = "inline-flex h-11 w-11 items-center justify-center rounded-full transition-all active:scale-95";
-  const styles = variant === "solid" ?
-  "bg-primary text-primary-foreground shadow-[var(--shadow-float)] hover:brightness-110" :
-  "text-foreground hover:bg-muted";
+export default function IconButton({ icon, onClick, ariaLabel, size = 20, className = '' }) {
   return (
-    <button className={`${base} ${styles} ${className}`} {...rest}>
-      {children}
-    </button>);
-
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      className={`inline-flex items-center justify-center p-2 rounded-lg
+        text-text-secondary hover:text-text-primary hover:bg-neutral-50
+        transition-colors cursor-pointer ${className}`}
+    >
+      <i className={`ti ti-${icon}`} style={{ fontSize: size }} aria-hidden="true" />
+    </button>
+  )
 }

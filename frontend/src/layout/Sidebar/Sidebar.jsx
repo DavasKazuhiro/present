@@ -1,4 +1,7 @@
-import styles from './Sidebar.module.css'
+// sidebar do professor, visível só no desktop (lg pra cima)
+// no mobile a navegação vai pro BottomNav
+
+import Logo from '../../components/common/Logo/Logo'
 
 const NAV_ITEMS = [
   { id: 'dashboard',  label: 'Dashboard',   icon: 'layout-dashboard' },
@@ -11,59 +14,82 @@ const BOTTOM_ITEMS = [
   { id: 'ajustes',       label: 'Ajustes',       icon: 'adjustments-horizontal' },
 ]
 
-function PresentLogo() {
-  return (
-    <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <circle cx="16" cy="16" r="5.5" stroke="var(--color-primary-600)" strokeWidth="2"/>
-      {[0,45,90,135,180,225,270,315].map((deg, i) => {
-        const rad = (deg * Math.PI) / 180
-        const x1 = 16 + 10 * Math.sin(rad)
-        const y1 = 16 - 10 * Math.cos(rad)
-        const x2 = 16 + 14 * Math.sin(rad)
-        const y2 = 16 - 14 * Math.cos(rad)
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-primary-400)" strokeWidth="2" strokeLinecap="round"/>
-      })}
-    </svg>
-  )
-}
-
 export function Sidebar({ activeRoute = 'dashboard', onNavigate }) {
   return (
-    <aside className={styles.sidebar} aria-label="Navegação principal">
-      <div className={styles.logo}>
-        <PresentLogo />
+    <aside
+      className="hidden lg:flex w-[220px] min-w-[220px] h-screen bg-primary-50
+        flex-col py-7 px-4 gap-0.5 overflow-hidden relative"
+      aria-label="Navegação principal"
+    >
+      {/* borda sutil à direita */}
+      <div className="absolute right-0 top-0 bottom-0 w-px
+        bg-gradient-to-b from-transparent via-white/[0.06] to-transparent" />
+
+      {/* logo */}
+      <div className="flex items-center gap-2.5 text-primary-600 text-xl font-semibold mb-8 px-2 tracking-tight">
+        <Logo size={26} />
         <span>Present</span>
       </div>
 
-      <nav className={styles.nav} aria-label="Menu principal">
+      {/* nav principal */}
+      <nav className="flex flex-col gap-0.5" aria-label="Menu principal">
         {NAV_ITEMS.map(item => (
-          <button
+          <SidebarItem
             key={item.id}
-            className={`${styles.navItem} ${activeRoute === item.id ? styles.active : ''}`}
+            item={item}
+            active={activeRoute === item.id}
             onClick={() => onNavigate?.(item.id)}
-            aria-current={activeRoute === item.id ? 'page' : undefined}
-          >
-            <i className={`ti ti-${item.icon}`} aria-hidden="true" />
-            <span>{item.label}</span>
-          </button>
+          />
         ))}
       </nav>
 
-      <div className={styles.spacer} />
-      <div className={styles.divider} />
+      {/* empurra as configs pra baixo */}
+      <div className="flex-1 min-h-6" />
 
-      <nav className={styles.nav} aria-label="Configurações">
+      {/* divisor */}
+      <div className="h-px bg-white/[0.07] mx-3 my-2" />
+
+      {/* nav de configurações */}
+      <nav className="flex flex-col gap-0.5" aria-label="Configurações">
         {BOTTOM_ITEMS.map(item => (
-          <button
+          <SidebarItem
             key={item.id}
-            className={`${styles.navItem} ${activeRoute === item.id ? styles.active : ''}`}
+            item={item}
+            active={activeRoute === item.id}
             onClick={() => onNavigate?.(item.id)}
-          >
-            <i className={`ti ti-${item.icon}`} aria-hidden="true" />
-            <span>{item.label}</span>
-          </button>
+          />
         ))}
       </nav>
     </aside>
+  )
+}
+
+// item individual da sidebar — separei pra não repetir a mesma lógica
+function SidebarItem({ item, active, onClick }) {
+  return (
+    <button
+      className={`flex items-center gap-2.5 py-[9px] px-3 rounded-md text-[15px]
+        w-full text-left border-none cursor-pointer relative
+        transition-colors duration-150
+        ${active
+          ? 'bg-white/[0.11] text-primary-600 font-medium'
+          : 'bg-transparent text-primary-600 font-normal hover:bg-white/[0.07] hover:text-primary-400'
+        }`}
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+    >
+      {/* barrinha verde do item ativo */}
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px]
+          bg-primary-400 rounded-r-sm" />
+      )}
+
+      <i
+        className={`ti ti-${item.icon} text-[17px] shrink-0
+          ${active ? 'opacity-100 text-primary-300' : 'opacity-85'}`}
+        aria-hidden="true"
+      />
+      <span>{item.label}</span>
+    </button>
   )
 }

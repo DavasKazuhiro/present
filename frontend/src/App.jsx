@@ -48,7 +48,7 @@ export default function App() {
 
   if (loadingSession) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-surface-900 flex items-center justify-center text-white">
         Carregando...
       </div>
     )
@@ -75,13 +75,10 @@ export default function App() {
         }
       />
 
+      {/* TODO: descomentar o ProtectedRoute quando o back voltar */}
       <Route
         path="/dashboard/teacher"
-        element={
-          <ProtectedRoute allowedRoles={['professor']}>
-            <TeacherDashboardPage />
-          </ProtectedRoute>
-        }
+        element={<TeacherDashboardPage />}
       />
       <Route
         path="/dashboard/student"
