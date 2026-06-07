@@ -1,5 +1,5 @@
-import { Card } from "@/components/common/Card/Card";
-import { Badge } from "@/components/common/Badge/Badge";
+import Card from "@/components/common/Card/Card"; 
+import Badge from "@/components/common/Badge/Badge";   
 import { ChevronRight, Clock, Users } from "lucide-react";
 
 export function ClassItem({ data }) {

@@ -5,6 +5,8 @@ import RegisterPage from './pages/RegisterPage'
 import TeacherDashboardPage from './pages/TeacherDashboardPage'
 import StudentTurmas from './pages/StudentTurmas'
 import { getCurrentUser, getDashboardPath, validateSession } from './services/auth.service'
+import TeacherClassPage from './pages/TeacherClassPage'
+import AttendanceDetailPage from './pages/AttendanceDetailPage'
 
 function ProtectedRoute({ allowedRoles, children }) {
   const user = getCurrentUser()
@@ -88,6 +90,17 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/teacher/classes/" element={<TeacherClassPage />} />
+      <Route
+        path="/teacher/classes/"
+        element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <TeacherClassPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/teacher/classes/:id/attendances/" element={<AttendanceDetailPage />} />
+
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
