@@ -9,7 +9,7 @@ export default function PasswordInput({ value, onChange, placeholder = 'Senha', 
     <div className="relative w-full">
       {/* cadeado à esquerda */}
       <i
-        className="ti ti-lock absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+        className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
         style={{ fontSize: 20 }}
         aria-hidden="true"
       />
@@ -31,7 +31,7 @@ export default function PasswordInput({ value, onChange, placeholder = 'Senha', 
         aria-label={showPassword ? 'Esconder senha' : 'Mostrar senha'}
       >
         <i
-          className={showPassword ? 'ti ti-eye-off' : 'ti ti-eye'}
+          className={showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'}
           style={{ fontSize: 20 }}
           aria-hidden="true"
         />

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Clock, Plus, Radio, Trash2, Users } from 'lucide-react'
 import { AppLayout } from '../layout/AppLayout/AppLayout'
 import { Footer } from '../layout/Footer/Footer'
 import { DashboardHeader } from '../features/dashboard/DashboardHeader'
@@ -127,10 +126,10 @@ export function TeacherDashboardPage() {
 
       <div className="px-7 max-sm:px-4 py-6 pb-10 flex flex-col gap-4">
         <section className="grid grid-cols-3 max-lg:grid-cols-1 gap-3.5" aria-label="Métricas gerais">
-          <MetricCard icon="book" value={classes.length} label="Matérias criadas" darkIcon />
-          <MetricCard icon="clipboard-check" value={metrics.openAttendances} label="Chamadas abertas" darkIcon />
+          <MetricCard icon="fa-solid fa-book" value={classes.length} label="Matérias criadas" darkIcon />
+          <MetricCard icon="fa-solid fa-clipboard-check" value={metrics.openAttendances} label="Chamadas abertas" darkIcon />
           <MetricCard
-            icon="chart-line"
+            icon="fa-solid fa-chart-line"
             value={`${metrics.average}%`}
             label="Frequência média"
             deltaType="positive"
@@ -148,7 +147,7 @@ export function TeacherDashboardPage() {
                 <h2 className="text-lg font-bold text-text-primary">Criar matéria</h2>
                 <p className="text-sm text-text-secondary">Depois adicione alunos pelo e-mail cadastrado.</p>
               </div>
-              <Plus className="h-5 w-5 text-primary-600" />
+              <i className="fa-solid fa-plus text-primary-600 text-[18px]" aria-hidden="true" />
             </div>
 
             <div className="grid gap-3">
@@ -227,7 +226,7 @@ export function TeacherDashboardPage() {
                     onClick={addSchedule}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700"
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <i className="fa-solid fa-plus text-[14px]" aria-hidden="true" />
                     Adicionar horário
                   </button>
                 </div>
@@ -264,7 +263,7 @@ export function TeacherDashboardPage() {
                         className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border-default text-danger-600 disabled:opacity-40"
                         aria-label="Remover horário"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <i className="fa-solid fa-trash text-[14px]" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -279,7 +278,7 @@ export function TeacherDashboardPage() {
               disabled={saving}
               className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary-800 text-sm font-semibold text-neutral-0 transition hover:bg-primary-900 disabled:opacity-60"
             >
-              <Plus className="h-4 w-4" />
+              <i className="fa-solid fa-plus text-[16px]" aria-hidden="true" />
               {saving ? 'Criando...' : 'Criar matéria'}
             </button>
           </form>
@@ -317,22 +316,22 @@ export function TeacherDashboardPage() {
                       </div>
                       {turma.openSessionId ? (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2.5 py-1 text-xs font-semibold text-success-600">
-                          <Radio className="h-3.5 w-3.5" />
+                          <i className="fa-solid fa-circle-dot text-[14px]" aria-hidden="true" />
                           Chamada aberta
                         </span>
                       ) : null}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-4 text-xs text-text-secondary">
                       <span className="inline-flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
+                        <i className="fa-solid fa-clock text-[14px]" aria-hidden="true" />
                         {turma.schedule}
                       </span>
                       <span className="inline-flex items-center gap-1.5">
-                        <Users className="h-4 w-4" />
+                        <i className="fa-solid fa-users text-[14px]" aria-hidden="true" />
                         {turma.enrolledCount} alunos
                       </span>
                       <span className="inline-flex items-center gap-1.5">
-                        <BookOpen className="h-4 w-4" />
+                        <i className="fa-solid fa-book-open text-[14px]" aria-hidden="true" />
                         {turma.attendancesDone} chamadas
                       </span>
                     </div>

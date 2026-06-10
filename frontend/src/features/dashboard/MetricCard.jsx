@@ -19,7 +19,7 @@ export function MetricCard({ icon, value, label, delta, deltaType = 'positive', 
           ? 'bg-surface-800 text-neutral-0'
           : 'bg-neutral-50 border border-border-default text-neutral-500'
         }`}>
-        <i className={`ti ti-${icon}`} aria-hidden="true" />
+        <i className={`${icon}`} aria-hidden="true" />
       </div>
 
       <div className="flex flex-col gap-[3px] min-w-0">

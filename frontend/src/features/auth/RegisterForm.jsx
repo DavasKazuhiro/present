@@ -55,7 +55,7 @@ export default function RegisterForm() {
     <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
       <div className="relative">
         <i
-          className="ti ti-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+          className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
           style={{ fontSize: 20 }}
           aria-hidden="true"
         />
@@ -69,14 +69,21 @@ export default function RegisterForm() {
         />
       </div>
 
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="E-mail"
-        autoComplete="email"
-        className="w-full bg-transparent border border-neutral-200 rounded-lg py-3 px-4 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-primary-400"
-      />
+      <div className="relative">
+        <i
+          className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+          style={{ fontSize: 20 }}
+          aria-hidden="true"
+        />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="E-mail"
+          autoComplete="email"
+          className="w-full bg-transparent border border-neutral-200 rounded-lg py-3 pl-12 pr-4 text-neutral-700 placeholder-neutral-400 focus:outline-none focus:border-primary-400"
+        />
+      </div>
 
       <select
         value={role}

@@ -30,7 +30,7 @@ export function ClassItem({ data, onOpenCheckin }) {
           </p>
           <div className="mt-1 flex w-full items-center gap-4 justify-start text-xs text-muted-foreground">
             <span className="flex w-full justify-start">
-              <Badge className="bg-primary-300 text-primary-foreground">{data.group}</Badge>
+              <Badge className="bg-primary-300 text-white">{data.group}</Badge>
             </span>
           </div>
         </div>

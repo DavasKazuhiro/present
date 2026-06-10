@@ -44,7 +44,7 @@ export default function LoginForm() {
       {/* campo de email */}
       <div className="relative">
         <i
-          className="ti ti-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
+          className="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400"
           style={{ fontSize: 20 }}
           aria-hidden="true"
         />

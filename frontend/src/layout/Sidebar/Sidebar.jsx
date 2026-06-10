@@ -4,14 +4,14 @@
 import Logo from '../../components/common/Logo/Logo'
 
 const NAV_ITEMS = [
-  { id: 'dashboard',  label: 'Dashboard',   icon: 'layout-dashboard' },
-  { id: 'calendario', label: 'Calendário',  icon: 'calendar' },
-  { id: 'turmas',     label: 'Turmas',      icon: 'school' },
+  { id: 'dashboard',  label: 'Dashboard',   icon: 'fa-solid fa-chart-pie' },
+  { id: 'calendario', label: 'Calendário',  icon: 'fa-solid fa-calendar-days' },
+  { id: 'turmas',     label: 'Turmas',      icon: 'fa-solid fa-school' },
 ]
 
 const BOTTOM_ITEMS = [
-  { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
-  { id: 'ajustes',       label: 'Ajustes',       icon: 'adjustments-horizontal' },
+  { id: 'configuracoes', label: 'Configurações', icon: 'fa-solid fa-gear' },
+  { id: 'ajustes',       label: 'Ajustes',       icon: 'fa-solid fa-sliders' },
 ]
 
 export function Sidebar({ activeRoute = 'dashboard', onNavigate }) {
@@ -85,7 +85,7 @@ function SidebarItem({ item, active, onClick }) {
       )}
 
       <i
-        className={`ti ti-${item.icon} text-[17px] shrink-0
+        className={`${item.icon} text-[17px] shrink-0
           ${active ? 'opacity-100 text-primary-300' : 'opacity-85'}`}
         aria-hidden="true"
       />
