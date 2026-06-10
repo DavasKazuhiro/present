@@ -51,6 +51,10 @@ CREATE TABLE `chamada_alunos` (
   `chamada_id` int NOT NULL,
   `aluno_id` int NOT NULL,
   `presente` tinyint(1) NOT NULL DEFAULT '1',
+  `data_resposta` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `distancia_metros` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`chamada_id`,`aluno_id`),
   KEY `aluno_id` (`aluno_id`),
   CONSTRAINT `chamada_alunos_ibfk_1` FOREIGN KEY (`chamada_id`) REFERENCES `chamadas` (`id`) ON DELETE CASCADE,
@@ -78,8 +82,15 @@ CREATE TABLE `chamadas` (
   `id` int NOT NULL AUTO_INCREMENT,
   `turma_id` int NOT NULL,
   `data_chamada` date NOT NULL,
+  `titulo` varchar(120) DEFAULT NULL,
   `conteudo` text,
   `data_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `aberta_ate` datetime DEFAULT NULL,
+  `raio_metros` int NOT NULL DEFAULT '20',
+  `encerrada_em` datetime DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'open',
+  `total_matriculados` int NOT NULL DEFAULT '0',
+  `total_respondidos` int NOT NULL DEFAULT '0',
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(11,8) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -133,6 +144,7 @@ CREATE TABLE `turma_alunos` (
   `turma_id` int NOT NULL,
   `aluno_id` int NOT NULL,
   `data_matricula` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
   PRIMARY KEY (`turma_id`,`aluno_id`),
   KEY `aluno_id` (`aluno_id`),
   CONSTRAINT `turma_alunos_ibfk_1` FOREIGN KEY (`turma_id`) REFERENCES `turmas` (`id`) ON DELETE CASCADE,
@@ -162,6 +174,8 @@ CREATE TABLE `turmas` (
   `nome` varchar(100) NOT NULL,
   `disciplina` varchar(100) NOT NULL,
   `curso` varchar(100) NOT NULL,
+  `descricao` text,
+  `cor` varchar(20) NOT NULL DEFAULT '#2563eb',
   `turno` enum('Manhã','Tarde','Noite','Integral') NOT NULL,
   `hora_inicio` time NOT NULL,
   `hora_fim` time NOT NULL,
@@ -182,6 +196,45 @@ LOCK TABLES `turmas` WRITE;
 /*!40000 ALTER TABLE `turmas` DISABLE KEYS */;
 /*!40000 ALTER TABLE `turmas` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `turma_horarios`
+--
+
+DROP TABLE IF EXISTS `turma_horarios`;
+CREATE TABLE `turma_horarios` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `turma_id` int NOT NULL,
+  `dia_semana` tinyint NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fim` time NOT NULL,
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_turma_horarios_turma_id` (`turma_id`),
+  CONSTRAINT `turma_horarios_ibfk_1` FOREIGN KEY (`turma_id`) REFERENCES `turmas` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Table structure for table `convite_links`
+--
+
+DROP TABLE IF EXISTS `convite_links`;
+CREATE TABLE `convite_links` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `turma_id` int NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `criado_por` int NOT NULL,
+  `expira_em` datetime DEFAULT NULL,
+  `max_usos` int DEFAULT NULL,
+  `usos` int NOT NULL DEFAULT '0',
+  `ativo` tinyint(1) NOT NULL DEFAULT '1',
+  `criado_em` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token_UNIQUE` (`token`),
+  KEY `idx_convite_links_turma_id` (`turma_id`),
+  CONSTRAINT `convite_links_ibfk_1` FOREIGN KEY (`turma_id`) REFERENCES `turmas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `convite_links_ibfk_2` FOREIGN KEY (`criado_por`) REFERENCES `professores` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Table structure for table `usuarios`
