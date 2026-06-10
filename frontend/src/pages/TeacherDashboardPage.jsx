@@ -7,6 +7,7 @@ import { MetricCard } from '../features/dashboard/MetricCard'
 import { WeeklyCalendar } from '../features/calendar/WeeklyCalendar'
 import { createTeacherClass, getTeacherClasses } from '../services/classes.service'
 import { getCurrentUser } from '../services/auth.service'
+import { TeacherClassCard} from '../features/dashboardProfessor/TeacherClassCard'
 
 const INITIAL_FORM = {
   nome: '',
@@ -59,7 +60,7 @@ export function TeacherDashboardPage() {
     try {
       setClasses(await getTeacherClasses())
     } catch {
-      setError('Não foi possível carregar suas matérias.')
+      setError('Não foi possível carregar suas turmas.')
     } finally {
       setLoading(false)
     }
@@ -126,7 +127,7 @@ export function TeacherDashboardPage() {
 
       <div className="px-7 max-sm:px-4 py-6 pb-10 flex flex-col gap-4">
         <section className="grid grid-cols-3 max-lg:grid-cols-1 gap-3.5" aria-label="Métricas gerais">
-          <MetricCard icon="fa-solid fa-book" value={classes.length} label="Matérias criadas" darkIcon />
+          <MetricCard icon="fa-solid fa-book" value={classes.length} label="Turmas criadas" darkIcon />
           <MetricCard icon="fa-solid fa-clipboard-check" value={metrics.openAttendances} label="Chamadas abertas" darkIcon />
           <MetricCard
             icon="fa-solid fa-chart-line"
@@ -144,7 +145,7 @@ export function TeacherDashboardPage() {
           >
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-bold text-text-primary">Criar matéria</h2>
+                <h2 className="text-lg font-bold text-text-primary">Criar Turma</h2>
                 <p className="text-sm text-text-secondary">Depois adicione alunos pelo e-mail cadastrado.</p>
               </div>
               <i className="fa-solid fa-plus text-primary-600 text-[18px]" aria-hidden="true" />
@@ -154,7 +155,7 @@ export function TeacherDashboardPage() {
               <input
                 value={form.nome}
                 onChange={(event) => setForm((prev) => ({ ...prev, nome: event.target.value }))}
-                placeholder="Turma. Ex: ADS 3º Semestre"
+                placeholder="Turma. Ex: Turma B Noite"
                 required
                 className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
               />
@@ -175,7 +176,7 @@ export function TeacherDashboardPage() {
               <textarea
                 value={form.descricao}
                 onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
-                placeholder="Descrição da matéria"
+                placeholder="Descrição da Turma"
                 rows={2}
                 className="resize-none rounded-lg border border-border-default px-3 py-2 text-sm outline-none focus:border-primary-400"
               />
@@ -279,63 +280,30 @@ export function TeacherDashboardPage() {
               className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary-800 text-sm font-semibold text-neutral-0 transition hover:bg-primary-900 disabled:opacity-60"
             >
               <i className="fa-solid fa-plus text-[16px]" aria-hidden="true" />
-              {saving ? 'Criando...' : 'Criar matéria'}
+              {saving ? 'Criando...' : 'Criar Turma'}
             </button>
           </form>
 
           <section className="rounded-lg border border-border-default bg-neutral-0 p-5 shadow-card">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-text-primary">Minhas matérias</h2>
+              <h2 className="text-lg font-bold text-text-primary">Minhas Turmas</h2>
               <span className="text-sm text-text-secondary">{metrics.totalStudents} alunos matriculados</span>
             </div>
 
             {loading ? (
-              <div className="py-10 text-center text-sm text-text-secondary">Carregando matérias...</div>
+              <div className="py-10 text-center text-sm text-text-secondary">Carregando Turmas...</div>
             ) : classes.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border-default px-4 py-10 text-center text-sm text-text-secondary">
-                Crie sua primeira matéria para adicionar alunos e abrir chamadas.
+                Crie sua primeira turma para adicionar alunos e abrir chamadas.
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {classes.map((turma) => (
-                  <button
+                  <TeacherClassCard
                     key={turma.id}
-                    type="button"
+                    turma={turma}
                     onClick={() => navigate(`/teacher/classes/${turma.id}`)}
-                    className="rounded-lg border border-border-default bg-bg-card p-4 text-left transition hover:border-primary-300 hover:bg-primary-50"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h3 className="flex items-center gap-2 text-base font-bold text-text-primary">
-                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: turma.color }} />
-                          {turma.subject}
-                        </h3>
-                        <p className="mt-1 text-sm text-text-secondary">
-                          {turma.name} · {turma.course}
-                        </p>
-                      </div>
-                      {turma.openSessionId ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2.5 py-1 text-xs font-semibold text-success-600">
-                          <i className="fa-solid fa-circle-dot text-[14px]" aria-hidden="true" />
-                          Chamada aberta
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-text-secondary">
-                      <span className="inline-flex items-center gap-1.5">
-                        <i className="fa-solid fa-clock text-[14px]" aria-hidden="true" />
-                        {turma.schedule}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <i className="fa-solid fa-users text-[14px]" aria-hidden="true" />
-                        {turma.enrolledCount} alunos
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <i className="fa-solid fa-book-open text-[14px]" aria-hidden="true" />
-                        {turma.attendancesDone} chamadas
-                      </span>
-                    </div>
-                  </button>
+                  />
                 ))}
               </div>
             )}

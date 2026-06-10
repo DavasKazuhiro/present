@@ -58,7 +58,7 @@ export function WeeklyCalendar({ subjects = [], onSubjectClick }) {
         <select
           value={turno}
           onChange={(e) => setTurno(e.target.value)}
-          className="rounded-md border border-border-default px-2 py-1 text-sm"
+          className="rounded-md border border-border-default px-2 py-1 text-sm bg-white"
         >
           {Object.entries(TURNOS).map(([key, { label }]) => (
             <option key={key} value={key}>{label}</option>
