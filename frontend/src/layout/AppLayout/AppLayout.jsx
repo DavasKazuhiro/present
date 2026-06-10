@@ -27,7 +27,7 @@ export function AppLayout({ children, calendar }) {
       <Sidebar activeRoute={activeRoute} onNavigate={setActiveRoute} />
 
       {/* conteúdo principal — ocupa o resto da tela */}
-      <main className="flex-1 min-w-0 overflow-y-auto flex flex-col
+      <main className="flex-1 min-w-0 min-h-0 overflow-y-auto flex flex-col
         max-lg:pb-16
         [scrollbar-width:thin] [scrollbar-color:#D4D4D4_transparent]">
         {activeRoute === 'configuracoes' ? (

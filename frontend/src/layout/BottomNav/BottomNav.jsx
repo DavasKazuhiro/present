@@ -2,10 +2,10 @@
 // substitui a sidebar quando a tela é pequena
 
 const NAV_ITEMS = [
-  { id: 'dashboard',     label: 'Home',      icon: 'layout-dashboard' },
-  { id: 'turmas',        label: 'Turmas',    icon: 'school' },
-  { id: 'calendario',    label: 'Agenda',    icon: 'calendar' },
-  { id: 'configuracoes', label: 'Config',    icon: 'settings' },
+  { id: 'dashboard',     label: 'Home',      icon: 'fa-solid fa-home' },
+  { id: 'turmas',        label: 'Turmas',    icon: 'fa-solid fa-school' },
+  { id: 'calendario',    label: 'Agenda',    icon: 'fa-solid fa-calendar-days' },
+  { id: 'configuracoes', label: 'Config',    icon: 'fa-solid fa-gear' },
 ]
 
 export function BottomNav({ activeRoute = 'dashboard', onNavigate }) {
@@ -30,7 +30,7 @@ export function BottomNav({ activeRoute = 'dashboard', onNavigate }) {
               }`}
             aria-current={isActive ? 'page' : undefined}
           >
-            <i className={`ti ti-${item.icon} text-xl`} aria-hidden="true" />
+            <i className={`${item.icon} text-xl`} aria-hidden="true" />
             <span className="text-[10px] font-medium leading-none">{item.label}</span>
           </button>
         )
