@@ -1,0 +1,19 @@
+{
+  "name": "Present",
+  "short_name": "Present",
+  "description": "Chamada acadêmica automática por matéria, localização e calendário semanal.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f0f2f0",
+  "theme_color": "#1f6f4a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/present-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

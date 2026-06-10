@@ -1,27 +1,51 @@
-import { useState } from "react";
-import {
-  MapPin,
-  Navigation,
-  User,
-  ShieldCheck,
-  Check,
-  X,
-  AlertTriangle,
-  PhoneCall,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, Check, LocateFixed, MapPin, Navigation, ShieldCheck, User, X } from 'lucide-react'
 
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-  tone = "default",
-}) {
+function formatTime(totalSeconds = 0) {
+  const safe = Math.max(0, Number(totalSeconds) || 0)
+  const minutes = String(Math.floor(safe / 60)).padStart(2, '0')
+  const seconds = String(safe % 60).padStart(2, '0')
+  return `${minutes}:${seconds}`
+}
+
+function distanceMeters(a, b) {
+  if (!a || !b) return null
+  const earth = 6371000
+  const toRad = (value) => (value * Math.PI) / 180
+  const dLat = toRad(b.latitude - a.latitude)
+  const dLon = toRad(b.longitude - a.longitude)
+  const lat1 = toRad(a.latitude)
+  const lat2 = toRad(b.latitude)
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2
+  return Math.round(2 * earth * Math.asin(Math.sqrt(h)))
+}
+
+function getCurrentPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Seu navegador não permite leitura de localização.'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) =>
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        }),
+      () => reject(new Error('Permita o acesso à localização para responder a chamada.')),
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    )
+  })
+}
+
+function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   const valueTone =
-    tone === "danger"
-      ? "text-danger-600"
-      : tone === "success"
-      ? "text-success-600"
-      : "text-text-primary";
+    tone === 'danger'
+      ? 'text-danger-600'
+      : tone === 'success'
+        ? 'text-success-600'
+        : 'text-text-primary'
 
   return (
     <div className="flex items-center justify-between border-b border-border-default py-3 last:border-b-0">
@@ -29,76 +53,88 @@ function InfoRow({
         <Icon className="h-4 w-4" />
         <span>{label}</span>
       </div>
-
-      <span className={`text-sm font-semibold ${valueTone}`}>
-        {value}
-      </span>
+      <span className={`text-sm font-semibold ${valueTone}`}>{value}</span>
     </div>
-  );
+  )
 }
 
-export function StudentCheckinModal({
-  open = true,
-  onClose = () => {},
-  classTitle = "Engenharia de Software · Sala B-204",
-  professor = "Carlos Andrade",
-  timeLeft = "06:42",
-  distance = 38,
-  maxDistance = 50,
-  onConfirm = () => {},
-  onRequestManual = () => {},
-}) {
-  const [inRange, setInRange] = useState(true);
+export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
+  const [location, setLocation] = useState(null)
+  const [locating, setLocating] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  if (!open) return null;
+  const distance = useMemo(
+    () =>
+      distanceMeters(
+        session ? { latitude: session.latitude, longitude: session.longitude } : null,
+        location
+      ),
+    [session, location]
+  )
+  const outOfRange = distance !== null && distance > Number(session?.radiusMeters ?? 0)
+  const timeLeft = formatTime(session?.secondsLeft)
 
-  const outOfRange = !inRange;
+  async function refreshLocation() {
+    setLocating(true)
+    setError('')
+    try {
+      setLocation(await getCurrentPosition())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível ler sua localização.')
+    } finally {
+      setLocating(false)
+    }
+  }
 
-  const [minutes, seconds] = timeLeft.split(":");
+  useEffect(() => {
+    if (open) {
+      setLocation(null)
+      setError('')
+      setSuccess('')
+      refreshLocation()
+    }
+  }, [open, session?.id])
+
+  if (!open || !session) return null
+
+  async function handleConfirm() {
+    if (!location || outOfRange || session.answered) return
+
+    setSubmitting(true)
+    setError('')
+    const result = await onConfirm({
+      chamadaId: session.id,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    })
+    setSubmitting(false)
+
+    if (!result.success) {
+      setError(result.error)
+      return
+    }
+
+    setSuccess('Presença confirmada.')
+  }
+
+  const statusTone = session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-bg-card shadow-card">
-        {/* Botão fechar */}
+      <div className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-bg-card shadow-card">
         <button
           onClick={onClose}
           aria-label="Fechar"
-          className="
-            absolute right-4 top-4 z-10
-            inline-flex h-8 w-8 items-center justify-center
-            rounded-full
-            text-text-secondary
-            transition
-            hover:bg-neutral-100
-          "
+          className="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-neutral-100"
         >
           <X className="h-4 w-4" />
         </button>
 
-        {/* Header */}
         <div className="flex flex-col items-center px-6 pb-5 pt-8 text-center">
-          <div
-            className={`relative flex h-20 w-20 items-center justify-center rounded-full ${
-              outOfRange
-                ? "bg-danger-50"
-                : "bg-success-50"
-            }`}
-          >
-            <div
-              className={`absolute inset-0 animate-ping rounded-full opacity-30 ${
-                outOfRange
-                  ? "bg-danger-400"
-                  : "bg-success-400"
-              }`}
-            />
-
-            <MapPin
-              className={`relative h-8 w-8 ${
-                outOfRange
-                  ? "text-danger-600"
-                  : "text-success-600"
-              }`}
-            />
+          <div className={`relative flex h-20 w-20 items-center justify-center rounded-full ${statusTone === 'danger' ? 'bg-danger-50' : 'bg-success-50'}`}>
+            <MapPin className={`relative h-8 w-8 ${statusTone === 'danger' ? 'text-danger-600' : 'text-success-600'}`} />
           </div>
 
           <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-600">
@@ -106,43 +142,23 @@ export function StudentCheckinModal({
             Chamada ativa
           </div>
 
-          <h2 className="mt-2 text-2xl font-bold text-text-primary">
-            Confirmar presença
-          </h2>
-
+          <h2 className="mt-2 text-2xl font-bold text-text-primary">Confirmar presença</h2>
           <p className="mt-1 text-sm text-text-secondary">
-            {classTitle}
+            {session.subject} · {session.className}
           </p>
         </div>
 
-        {/* Estatísticas */}
-        <div className="mx-6 grid grid-cols-2 gap-4 rounded-2xl bg-neutral-50 p-4">
+        <div className="mx-6 grid grid-cols-2 gap-4 rounded-lg bg-neutral-50 p-4">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-              Tempo restante
-            </div>
-
-            <div className="mt-1 text-2xl font-bold tabular-nums text-text-primary">
-              {minutes}
-              <span className="text-text-secondary">
-                :{seconds}
-              </span>
-            </div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Tempo restante</div>
+            <div className="mt-1 text-2xl font-bold tabular-nums text-text-primary">{timeLeft}</div>
           </div>
-
           <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-              Localização
-            </div>
-
-            <div
-              className={`mt-1 inline-flex items-center gap-1 text-sm font-semibold ${
-                outOfRange
-                  ? "text-danger-600"
-                  : "text-success-600"
-              }`}
-            >
-              {outOfRange ? (
+            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Localização</div>
+            <div className={`mt-1 inline-flex items-center gap-1 text-sm font-semibold ${outOfRange ? 'text-danger-600' : 'text-success-600'}`}>
+              {locating ? (
+                'Localizando...'
+              ) : outOfRange ? (
                 <>
                   <AlertTriangle className="h-4 w-4" />
                   Fora do raio
@@ -157,113 +173,54 @@ export function StudentCheckinModal({
           </div>
         </div>
 
-        {/* Simulação */}
-        <div className="mx-6 mt-3 flex items-center justify-between rounded-xl border border-dashed border-border-default px-3 py-2 text-xs text-text-secondary">
-          <span>Simular fora do raio</span>
-
-          <button
-            onClick={() => setInRange((prev) => !prev)}
-            className={`relative h-5 w-9 rounded-full transition ${
-              outOfRange
-                ? "bg-danger-400"
-                : "bg-neutral-300"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
-                outOfRange
-                  ? "left-4"
-                  : "left-0.5"
-              }`}
-            />
-          </button>
-        </div>
-
-        {/* Informações */}
         <div className="px-6 pt-2">
           <InfoRow
             icon={Navigation}
-            label="Distância da sala"
-            value={`${distance}m de ${maxDistance}m`}
-            tone={outOfRange ? "danger" : "default"}
+            label="Distância"
+            value={distance === null ? 'Aguardando GPS' : `${distance}m de ${session.radiusMeters}m`}
+            tone={outOfRange ? 'danger' : 'default'}
           />
-
-          <InfoRow
-            icon={User}
-            label="Professor"
-            value={professor}
-          />
-
+          <InfoRow icon={User} label="Professor" value={session.professorName} />
           <InfoRow
             icon={ShieldCheck}
             label="Validação GPS"
-            value={
-              outOfRange
-                ? "Inválida"
-                : "✓ Ativa"
-            }
-            tone={
-              outOfRange
-                ? "danger"
-                : "success"
-            }
+            value={session.answered || success ? 'Respondida' : outOfRange ? 'Inválida' : 'Ativa'}
+            tone={session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'}
           />
         </div>
 
-        {/* Ações */}
+        {(error || success) && (
+          <p className={`mx-6 mt-3 rounded-lg px-3 py-2 text-center text-sm font-semibold ${success ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'}`}>
+            {success || error}
+          </p>
+        )}
+
         <div className="space-y-2 p-6 pt-4">
           <button
-            onClick={onConfirm}
-            disabled={outOfRange}
-            className="
-              inline-flex h-12 w-full items-center justify-center gap-2
-              rounded-2xl
-              bg-action-primary
-              text-action-primary-text
-              text-sm font-semibold
-              shadow-card
-              transition
-              hover:bg-action-primary-hover
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-            "
+            onClick={handleConfirm}
+            disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success)}
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-action-primary text-sm font-semibold text-action-primary-text shadow-card transition hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Check className="h-4 w-4" />
-            Confirmar check-in
+            {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : 'Confirmar check-in'}
           </button>
 
-          {outOfRange && (
-            <button
-              onClick={onRequestManual}
-              className="
-                inline-flex h-12 w-full items-center justify-center gap-2
-                rounded-2xl
-                border border-danger-100
-                bg-danger-50
-                text-sm font-semibold
-                text-danger-600
-                transition
-                hover:bg-danger-100
-              "
-            >
-              <PhoneCall className="h-4 w-4" />
-              Solicitar chamada manual
-            </button>
-          )}
-
-          <p
-            className={`text-center text-xs ${
-              outOfRange
-                ? "text-danger-600"
-                : "text-text-secondary"
-            }`}
+          <button
+            onClick={refreshLocation}
+            disabled={locating || submitting}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-bg-card text-sm font-semibold text-primary-700 transition hover:bg-primary-50 disabled:opacity-50"
           >
+            <LocateFixed className="h-4 w-4" />
+            Atualizar localização
+          </button>
+
+          <p className={`text-center text-xs ${outOfRange ? 'text-danger-600' : 'text-text-secondary'}`}>
             {outOfRange
-              ? "Você está fora do raio permitido para o check-in"
-              : "Sua localização será validada uma única vez"}
+              ? 'Entre no raio permitido e toque em atualizar localização para tentar novamente.'
+              : 'Sua localização será validada pelo servidor no momento do envio.'}
           </p>
         </div>
       </div>
     </div>
-  );
+  )
 }

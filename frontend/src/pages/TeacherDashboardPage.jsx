@@ -1,75 +1,346 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { BookOpen, Clock, Plus, Radio, Trash2, Users } from 'lucide-react'
 import { AppLayout } from '../layout/AppLayout/AppLayout'
 import { Footer } from '../layout/Footer/Footer'
 import { DashboardHeader } from '../features/dashboard/DashboardHeader'
 import { MetricCard } from '../features/dashboard/MetricCard'
-import { TodayClassesCard } from '../features/dashboard/TodayClassesCard'
-import { WeekCalendarCard } from '../features/dashboard/WeekCalendarCard'
-import { AttendanceDistributionCard } from '../features/dashboard/AttendanceDistributionCard'
-import { RecentAttendancesCard } from '../features/dashboard/RecentAttendancesCard'
+import { WeeklyCalendar } from '../features/calendar/WeeklyCalendar'
+import { createTeacherClass, getTeacherClasses } from '../services/classes.service'
+import { getCurrentUser } from '../services/auth.service'
 
-import {
-  mockTeacherProfile,
-  mockMetrics,
-  mockAulasHoje,
-  mockWeekCalendar,
-  mockUltimasChamadas,
-  mockDistribuicaoPresenca,
-} from '../mocks/dashboard.mock'
+const INITIAL_FORM = {
+  nome: '',
+  disciplina: '',
+  curso: '',
+  descricao: '',
+  cor: '#2563eb',
+  turno: 'Noite',
+  horaInicio: '19:00',
+  horaFim: '21:00',
+  horarios: [{ diaSemana: 2, horaInicio: '19:00', horaFim: '21:00' }],
+}
+
+const COLORS = ['#2563eb', '#16a34a', '#dc2626', '#9333ea', '#ea580c', '#0891b2', '#be123c', '#475569']
+const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
 
 function formatDataHora() {
   const agora = new Date()
-  const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
-  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+  const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
   const dia = dias[agora.getDay()]
   const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
   return `${dia} · ${agora.getDate()} ${meses[agora.getMonth()]} · ${hora}`
 }
 
 export function TeacherDashboardPage() {
-  const handleAulaAction = (aula) => {
-    console.log('Ação na aula:', aula)
+  const navigate = useNavigate()
+  const user = getCurrentUser()
+  const [classes, setClasses] = useState([])
+  const [form, setForm] = useState(INITIAL_FORM)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const metrics = useMemo(() => {
+    const totalStudents = classes.reduce((sum, turma) => sum + Number(turma.enrolledCount ?? 0), 0)
+    const openAttendances = classes.filter((turma) => turma.openSessionId).length
+    const average =
+      classes.length > 0
+        ? Math.round(
+            classes.reduce((sum, turma) => sum + Number(turma.semesterRate ?? 0), 0) / classes.length
+          )
+        : 0
+
+    return { totalStudents, openAttendances, average }
+  }, [classes])
+
+  async function loadClasses() {
+    setError('')
+    try {
+      setClasses(await getTeacherClasses())
+    } catch {
+      setError('Não foi possível carregar suas matérias.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleChamadaMenu = (chamada) => {
-    console.log('Menu da chamada:', chamada)
+  useEffect(() => {
+    loadClasses()
+  }, [])
+
+  async function handleCreateClass(event) {
+    event.preventDefault()
+    setSaving(true)
+    setError('')
+
+    const result = await createTeacherClass(form)
+    setSaving(false)
+
+    if (!result.success) {
+      setError(result.error)
+      return
+    }
+
+    setForm(INITIAL_FORM)
+    setClasses((current) => [result.class, ...current])
   }
 
-  const handleExportChart = () => {
-    console.log('Exportar gráfico')
+  function updateSchedule(index, field, value) {
+    setForm((prev) => ({
+      ...prev,
+      horarios: prev.horarios.map((schedule, currentIndex) =>
+        currentIndex === index ? { ...schedule, [field]: value } : schedule
+      ),
+    }))
+  }
+
+  function addSchedule() {
+    setForm((prev) => ({
+      ...prev,
+      horarios: [...prev.horarios, { diaSemana: 4, horaInicio: '19:00', horaFim: '21:00' }],
+    }))
+  }
+
+  function removeSchedule(index) {
+    setForm((prev) => ({
+      ...prev,
+      horarios: prev.horarios.filter((_, currentIndex) => currentIndex !== index),
+    }))
   }
 
   return (
-    <AppLayout>
+    <AppLayout
+      calendar={
+        <WeeklyCalendar
+          subjects={classes}
+          onSubjectClick={(turma) => navigate(`/teacher/classes/${turma.id}`)}
+        />
+      }
+    >
       <DashboardHeader
-        professorName={mockTeacherProfile.name}
+        professorName={user?.name ?? 'Professor'}
         dataHora={formatDataHora()}
-        onNotification={() => console.log('Notificações')}
+        onNotification={() => loadClasses()}
       />
 
       <div className="px-7 max-sm:px-4 py-6 pb-10 flex flex-col gap-4">
-        {/* métricas — 3 colunas no desktop, 1 no mobile */}
         <section className="grid grid-cols-3 max-lg:grid-cols-1 gap-3.5" aria-label="Métricas gerais">
-          <MetricCard icon="book" value={mockMetrics.aulasHoje} label="Aulas hoje" darkIcon />
+          <MetricCard icon="book" value={classes.length} label="Matérias criadas" darkIcon />
+          <MetricCard icon="clipboard-check" value={metrics.openAttendances} label="Chamadas abertas" darkIcon />
           <MetricCard
             icon="chart-line"
-            value={`${mockMetrics.frequenciaMedia}%`}
+            value={`${metrics.average}%`}
             label="Frequência média"
             deltaType="positive"
             darkIcon
           />
-          <MetricCard icon="clipboard-check" value={mockMetrics.chamadasMes} label="Chamadas mês" darkIcon />
         </section>
 
-        {/* aulas de hoje + calendário — 2 colunas no desktop, empilhado no mobile */}
-        <section className="grid grid-cols-[1.1fr_0.9fr] max-lg:grid-cols-1 gap-3.5 items-stretch" aria-label="Agenda">
-          <TodayClassesCard aulas={mockAulasHoje} onAction={handleAulaAction} />
-          <WeekCalendarCard eventos={mockWeekCalendar} diaAtual={3} />
-        </section>
+        <section className="grid grid-cols-[0.9fr_1.1fr] gap-4 max-xl:grid-cols-1">
+          <form
+            onSubmit={handleCreateClass}
+            className="rounded-lg border border-border-default bg-neutral-0 p-5 shadow-card"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-text-primary">Criar matéria</h2>
+                <p className="text-sm text-text-secondary">Depois adicione alunos pelo e-mail cadastrado.</p>
+              </div>
+              <Plus className="h-5 w-5 text-primary-600" />
+            </div>
 
-        {/* últimas chamadas + distribuição — 2 colunas no desktop, empilhado no mobile */}
-        <section className="grid grid-cols-2 max-lg:grid-cols-1 gap-3.5 items-stretch" aria-label="Chamadas e presença">
-          <RecentAttendancesCard chamadas={mockUltimasChamadas} onMenu={handleChamadaMenu} />
-          <AttendanceDistributionCard dados={mockDistribuicaoPresenca} onExport={handleExportChart} />
+            <div className="grid gap-3">
+              <input
+                value={form.nome}
+                onChange={(event) => setForm((prev) => ({ ...prev, nome: event.target.value }))}
+                placeholder="Turma. Ex: ADS 3º Semestre"
+                required
+                className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+              />
+              <input
+                value={form.disciplina}
+                onChange={(event) => setForm((prev) => ({ ...prev, disciplina: event.target.value }))}
+                placeholder="Disciplina. Ex: Engenharia de Software"
+                required
+                className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+              />
+              <input
+                value={form.curso}
+                onChange={(event) => setForm((prev) => ({ ...prev, curso: event.target.value }))}
+                placeholder="Curso"
+                required
+                className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+              />
+              <textarea
+                value={form.descricao}
+                onChange={(event) => setForm((prev) => ({ ...prev, descricao: event.target.value }))}
+                placeholder="Descrição da matéria"
+                rows={2}
+                className="resize-none rounded-lg border border-border-default px-3 py-2 text-sm outline-none focus:border-primary-400"
+              />
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">Cor</p>
+                <div className="flex flex-wrap gap-2">
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, cor: color }))}
+                      aria-label={`Selecionar cor ${color}`}
+                      className={`h-8 w-8 rounded-full border-2 ${form.cor === color ? 'border-neutral-900' : 'border-white'}`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  value={form.turno}
+                  onChange={(event) => setForm((prev) => ({ ...prev, turno: event.target.value }))}
+                  className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+                >
+                  <option>Manhã</option>
+                  <option>Tarde</option>
+                  <option>Noite</option>
+                  <option>Integral</option>
+                </select>
+                <input
+                  type="time"
+                  value={form.horaInicio}
+                  onChange={(event) => setForm((prev) => ({ ...prev, horaInicio: event.target.value }))}
+                  className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+                />
+                <input
+                  type="time"
+                  value={form.horaFim}
+                  onChange={(event) => setForm((prev) => ({ ...prev, horaFim: event.target.value }))}
+                  className="h-11 rounded-lg border border-border-default px-3 text-sm outline-none focus:border-primary-400"
+                />
+              </div>
+              <div className="rounded-lg border border-border-default p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-bold text-text-primary">Horários semanais</p>
+                  <button
+                    type="button"
+                    onClick={addSchedule}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Adicionar horário
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {form.horarios.map((schedule, index) => (
+                    <div key={`${schedule.diaSemana}-${index}`} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2">
+                      <select
+                        value={schedule.diaSemana}
+                        onChange={(event) => updateSchedule(index, 'diaSemana', Number(event.target.value))}
+                        className="h-10 rounded-lg border border-border-default px-2 text-sm outline-none focus:border-primary-400"
+                      >
+                        {DAYS.map((day, dayIndex) => (
+                          <option key={day} value={dayIndex}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="time"
+                        value={schedule.horaInicio}
+                        onChange={(event) => updateSchedule(index, 'horaInicio', event.target.value)}
+                        className="h-10 rounded-lg border border-border-default px-2 text-sm outline-none focus:border-primary-400"
+                      />
+                      <input
+                        type="time"
+                        value={schedule.horaFim}
+                        onChange={(event) => updateSchedule(index, 'horaFim', event.target.value)}
+                        className="h-10 rounded-lg border border-border-default px-2 text-sm outline-none focus:border-primary-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSchedule(index)}
+                        disabled={form.horarios.length === 1}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border-default text-danger-600 disabled:opacity-40"
+                        aria-label="Remover horário"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {error && <p className="mt-3 text-sm font-semibold text-danger-600">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary-800 text-sm font-semibold text-neutral-0 transition hover:bg-primary-900 disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" />
+              {saving ? 'Criando...' : 'Criar matéria'}
+            </button>
+          </form>
+
+          <section className="rounded-lg border border-border-default bg-neutral-0 p-5 shadow-card">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-text-primary">Minhas matérias</h2>
+              <span className="text-sm text-text-secondary">{metrics.totalStudents} alunos matriculados</span>
+            </div>
+
+            {loading ? (
+              <div className="py-10 text-center text-sm text-text-secondary">Carregando matérias...</div>
+            ) : classes.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border-default px-4 py-10 text-center text-sm text-text-secondary">
+                Crie sua primeira matéria para adicionar alunos e abrir chamadas.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {classes.map((turma) => (
+                  <button
+                    key={turma.id}
+                    type="button"
+                    onClick={() => navigate(`/teacher/classes/${turma.id}`)}
+                    className="rounded-lg border border-border-default bg-bg-card p-4 text-left transition hover:border-primary-300 hover:bg-primary-50"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="flex items-center gap-2 text-base font-bold text-text-primary">
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: turma.color }} />
+                          {turma.subject}
+                        </h3>
+                        <p className="mt-1 text-sm text-text-secondary">
+                          {turma.name} · {turma.course}
+                        </p>
+                      </div>
+                      {turma.openSessionId ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2.5 py-1 text-xs font-semibold text-success-600">
+                          <Radio className="h-3.5 w-3.5" />
+                          Chamada aberta
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-text-secondary">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        {turma.schedule}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users className="h-4 w-4" />
+                        {turma.enrolledCount} alunos
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <BookOpen className="h-4 w-4" />
+                        {turma.attendancesDone} chamadas
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
         </section>
       </div>
 

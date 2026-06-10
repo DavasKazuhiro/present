@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { X, Radio } from 'lucide-react'
 
-const DURACOES = [5, 10, 15, 20]
+const DURACOES = [7, 10, 15, 20]
 
 export default function NewAttendanceModal({ open, onClose, turma, proximoNumero, onAbrir }) {
   const [titulo, setTitulo] = useState('')
-  const [duracao, setDuracao] = useState(10)
-  const [raio, setRaio] = useState(50)
+  const [duracao, setDuracao] = useState(7)
+  const [raio, setRaio] = useState(20)
   const [conteudo, setConteudo] = useState('')
 
   if (!open) return null

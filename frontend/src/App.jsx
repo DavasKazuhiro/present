@@ -7,6 +7,7 @@ import StudentTurmas from './pages/StudentTurmas'
 import { getCurrentUser, getDashboardPath, validateSession } from './services/auth.service'
 import TeacherClassPage from './pages/TeacherClassPage'
 import AttendanceDetailPage from './pages/AttendanceDetailPage'
+import JoinClassPage from './pages/JoinClassPage'
 
 function ProtectedRoute({ allowedRoles, children }) {
   const user = getCurrentUser()
@@ -77,10 +78,13 @@ export default function App() {
         }
       />
 
-      {/* TODO: descomentar o ProtectedRoute quando o back voltar */}
       <Route
         path="/dashboard/teacher"
-        element={<TeacherDashboardPage />}
+        element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <TeacherDashboardPage />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/dashboard/student"
@@ -90,17 +94,30 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/teacher/classes/" element={<TeacherClassPage />} />
       <Route
-        path="/teacher/classes/"
+        path="/join/:token"
+        element={
+          <ProtectedRoute allowedRoles={['aluno']}>
+            <JoinClassPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/classes/:id"
         element={
           <ProtectedRoute allowedRoles={['professor']}>
             <TeacherClassPage />
           </ProtectedRoute>
         }
       />
-      <Route path="/teacher/classes/:id/attendances/" element={<AttendanceDetailPage />} />
-
+      <Route
+        path="/teacher/classes/:id/attendances/:attendanceId"
+        element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <AttendanceDetailPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

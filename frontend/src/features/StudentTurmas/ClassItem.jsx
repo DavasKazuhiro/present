@@ -1,10 +1,13 @@
 import Card from "@/components/common/Card/Card"; 
 import Badge from "@/components/common/Badge/Badge";   
-import { ChevronRight, Clock, Users } from "lucide-react";
+import { BellRing, CheckCircle2, ChevronRight } from "lucide-react";
 
-export function ClassItem({ data }) {
+export function ClassItem({ data, onOpenCheckin }) {
+  const hasActiveSession = Boolean(data.activeSession && !data.activeSession.answered)
+  const answered = Boolean(data.activeSession?.answered)
+
   return (
-    <Card className="cursor-pointer bg-neutral-0 hover:border-primary-300">
+    <Card className="bg-neutral-0 hover:border-primary-300">
       <div className="flex items-center gap-5">
         <div className="flex flex-col items-center justify-center rounded-xl bg-muted px-4 py-3 text-center">
           <span className="text-xs font-medium text-muted-foreground">início</span>
@@ -17,9 +20,14 @@ export function ClassItem({ data }) {
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <h3 className="truncate font-display text-lg font-semibold">{data.subject}</h3>
-            
+            {hasActiveSession && (
+              <Badge className="bg-success-50 text-success-600">Chamada aberta</Badge>
+            )}
+            {answered && <Badge className="bg-primary-50 text-primary-700">Respondida</Badge>}
           </div>
-          <p className="truncate text-sm text-muted-foreground">{data.course}</p>
+          <p className="truncate text-sm text-muted-foreground">
+            {data.course} · Prof. {data.professorName}
+          </p>
           <div className="mt-1 flex w-full items-center gap-4 justify-start text-xs text-muted-foreground">
             <span className="flex w-full justify-start">
               <Badge className="bg-primary-300 text-primary-foreground">{data.group}</Badge>
@@ -27,7 +35,20 @@ export function ClassItem({ data }) {
           </div>
         </div>
 
-        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />
+        {hasActiveSession ? (
+          <button
+            type="button"
+            onClick={() => onOpenCheckin?.(data.activeSession.id)}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary-800 px-3 text-sm font-semibold text-neutral-0 transition hover:bg-primary-900"
+          >
+            <BellRing className="h-4 w-4" />
+            Responder
+          </button>
+        ) : answered ? (
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-success-600" />
+        ) : (
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+        )}
       </div>
     </Card>);
 
