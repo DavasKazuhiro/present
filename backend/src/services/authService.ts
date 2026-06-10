@@ -30,13 +30,20 @@ function toTimestamp(value: Date | string): number {
   return value instanceof Date ? value.getTime() : new Date(value).getTime()
 }
 
+function inferInstitutionalRole(email: string): UserRole | null {
+  const normalized = email.trim().toLowerCase()
+  if (normalized.endsWith('@aluno.pucpr.edu.br')) return 'aluno'
+  if (normalized.endsWith('@pucpr.edu.br')) return 'professor'
+  return null
+}
+
 export async function registerUser(input: {
   name: string
   email: string
   password: string
   role: UserRole | 'teacher' | 'student'
 }): Promise<{ user: UserSafe; accessToken: string; refreshToken: string }> {
-  const role = normalizeUserRole(input.role)
+  const role = inferInstitutionalRole(input.email) ?? normalizeUserRole(input.role)
   if (!role) {
     throw new Error('Papel de usuário inválido.')
   }

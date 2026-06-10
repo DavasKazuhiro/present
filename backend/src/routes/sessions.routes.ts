@@ -4,7 +4,15 @@ import { requireAuth } from '../middleware/requireAuth'
 import { requireRole } from '../middleware/requireRole'
 import { validateBody } from '../middleware/validateBody'
 import { CheckInSchema, OpenSessionSchema } from '../validators/sessions'
-import { openClassSession, studentCheckIn } from '../services/sessionsService'
+import {
+  closeClassSession,
+  getAttendanceDetail,
+  getStudentSession,
+  listClassSessions,
+  listStudentNotifications,
+  openClassSession,
+  studentCheckIn,
+} from '../services/sessionsService'
 
 const router = express.Router()
 
@@ -17,12 +25,55 @@ router.post(
     const session = await openClassSession({
       professorUsuarioId: req.user!.id,
       turmaId: req.body.turmaId,
+      titulo: req.body.titulo,
       conteudo: req.body.conteudo,
       latitude: req.body.latitude,
       longitude: req.body.longitude,
+      raioMetros: req.body.raioMetros,
+      duracaoMinutos: req.body.duracaoMinutos,
     })
 
     return res.json({ success: true, session })
+  })
+)
+
+router.post(
+  '/:chamadaId/close',
+  requireAuth,
+  requireRole(['professor']),
+  asyncHandler(async (req, res) => {
+    const result = await closeClassSession({
+      professorUsuarioId: req.user!.id,
+      chamadaId: Number(req.params.chamadaId),
+    })
+    return res.json({ success: true, session: result })
+  })
+)
+
+router.get(
+  '/teacher/classes/:turmaId',
+  requireAuth,
+  requireRole(['professor']),
+  asyncHandler(async (req, res) => {
+    const sessions = await listClassSessions({
+      professorUsuarioId: req.user!.id,
+      turmaId: Number(req.params.turmaId),
+    })
+    return res.json({ success: true, sessions })
+  })
+)
+
+router.get(
+  '/teacher/classes/:turmaId/:chamadaId',
+  requireAuth,
+  requireRole(['professor']),
+  asyncHandler(async (req, res) => {
+    const detail = await getAttendanceDetail({
+      professorUsuarioId: req.user!.id,
+      turmaId: Number(req.params.turmaId),
+      chamadaId: Number(req.params.chamadaId),
+    })
+    return res.json({ success: true, ...detail })
   })
 )
 
@@ -36,6 +87,8 @@ router.post(
       const checkIn = await studentCheckIn({
         studentUsuarioId: req.user!.id,
         chamadaId: req.body.chamadaId,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
       })
       return res.json({ success: true, checkIn })
     } catch (err: any) {
@@ -44,5 +97,24 @@ router.post(
   })
 )
 
-export default router
+router.get(
+  '/notifications',
+  requireAuth,
+  requireRole(['aluno']),
+  asyncHandler(async (req, res) => {
+    const notifications = await listStudentNotifications(req.user!.id)
+    return res.json({ success: true, notifications })
+  })
+)
 
+router.get(
+  '/student/:chamadaId',
+  requireAuth,
+  requireRole(['aluno']),
+  asyncHandler(async (req, res) => {
+    const session = await getStudentSession(req.user!.id, Number(req.params.chamadaId))
+    return res.json({ success: true, session })
+  })
+)
+
+export default router

@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import authRoutes from './routes/auth.routes'
+import classesRoutes from './routes/classes.routes'
 import sessionsRoutes from './routes/sessions.routes'
 import { errorHandler } from './middleware/errorHandler'
 
@@ -12,8 +13,8 @@ app.use(express.json())
 app.get('/health', (_req, res) => res.json({ ok: true }))
 
 app.use('/auth', authRoutes)
+app.use('/classes', classesRoutes)
 app.use('/sessions', sessionsRoutes)
 
 app.use((_req, res) => res.status(404).json({ success: false, error: 'Rota não encontrada.' }))
 app.use(errorHandler)
-
