@@ -11,6 +11,7 @@ import {
   closeAttendance,
   enrollStudent,
   getClassAttendances,
+  getAttendanceDetail,
   getClassStudents,
   getInviteLink,
   getTeacherClass,
@@ -37,6 +38,13 @@ function getCurrentPosition() {
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     )
   })
+}
+
+const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+function formatDate(iso) {
+  const d = new Date(`${iso}T00:00:00`)
+  return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`
 }
 
 export default function TeacherClassPage() {
@@ -214,9 +222,38 @@ export default function TeacherClassPage() {
     await loadClass()
   }
 
-  function handleBaixar(attendanceId) {
-    navigate(`/teacher/classes/${turmaId}/attendances/${attendanceId}`)
+  async function handleBaixar(attendanceId) {
+  try {
+    const { attendance, students: attendanceStudents } = await getAttendanceDetail(turmaId, attendanceId)
+
+    const header = [
+      `Chamada: ${attendance.title}`,
+      `Data: ${formatDate(attendance.date)}`,
+      `Horário: ${attendance.time}`,
+      `Duração: ${attendance.durationMin} min`,
+      `Presença: ${attendance.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%`,
+      `Presentes: ${attendance.present}`,
+      `Ausentes: ${attendance.absent}`,
+      `Conteúdo: ${attendance.content || 'Sem conteúdo informado'}`,
+      '',
+      'Nome,Email,Situação',
+    ].join('\n')
+
+    const rows = attendanceStudents
+      .map((s) => `${s.name},${s.email},${s.present ? 'Presente' : 'Ausente'}`)
+      .join('\n')
+
+    const blob = new Blob(['\uFEFF' + `${header}\n${rows}`], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `chamada-${attendance.title}-${attendance.date}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    setMessage('Não foi possível baixar a lista de presença.')
   }
+}
 
   const inviteUrl = invite?.token ? `${window.location.origin}/join/${invite.token}` : ''
   const qrUrl = inviteUrl

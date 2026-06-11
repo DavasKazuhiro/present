@@ -11,6 +11,33 @@ function formatDate(iso) {
   return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`
 }
 
+function downloadAttendanceCSV(attendance, students) {
+  const header = [
+    `Chamada: ${attendance.title}`,
+    `Data: ${formatDate(attendance.date)}`,
+    `Horário: ${attendance.time}`,
+    `Duração: ${attendance.durationMin} min`,
+    `Presença: ${attendance.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%`,
+    `Presentes: ${attendance.present}`,
+    `Ausentes: ${attendance.absent}`,
+    `Conteúdo: ${attendance.content || 'Sem conteúdo informado'}`,
+    '',
+    'Nome,Email,Situação',
+  ].join('\n')
+
+  const rows = students
+    .map((s) => `${s.name},${s.email},${s.present ? 'Presente' : 'Ausente'}`)
+    .join('\n')
+
+  const blob = new Blob(['\uFEFF' + `${header}\n${rows}`], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `chamada-${attendance.title}-${attendance.date}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function AttendanceDetailPage() {
   const { id, attendanceId } = useParams()
   const navigate = useNavigate()
@@ -143,7 +170,7 @@ export default function AttendanceDetailPage() {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => downloadAttendanceCSV(attendance, students)}
             className="inline-flex items-center gap-2 rounded-lg border border-border-default bg-bg-card px-[18px] py-2.5 text-sm font-semibold text-primary-700 transition hover:border-primary-200 hover:bg-primary-50"
           >
             <Download className="h-[18px] w-[18px]" />
