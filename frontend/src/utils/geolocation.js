@@ -1,7 +1,7 @@
 export function getPrecisePosition({
   timeoutMs = 12000,
   desiredAccuracy = 25,
-  minSamples = 1,
+  minSamples = 2,
 } = {}) {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {

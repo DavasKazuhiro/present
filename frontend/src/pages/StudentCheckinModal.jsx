@@ -50,7 +50,7 @@ function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   )
 }
 
-export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = 50 }) {
+export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = null }) {
   const [location, setLocation] = useState(null)
   const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
