@@ -50,7 +50,7 @@ function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   )
 }
 
-export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = null }) {
+export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = 50 }) {
   const [location, setLocation] = useState(null)
   const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -238,6 +238,16 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDis
 
           <div className="space-y-2 p-6 pt-4">
             <button
+              type="button"
+              onClick={refreshLocation}
+              disabled={locating}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-neutral-50 text-sm font-semibold text-text-primary transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {locating ? 'Atualizando localização...' : 'Atualizar localização'}
+            </button>
+
+            <button
+              type="button"
               onClick={handleConfirm}
               disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success) || secondsLeft <= 0}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-action-primary text-sm font-semibold text-action-primary-text shadow-card transition hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
@@ -248,6 +258,7 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDis
 
           {(outOfRange || locating) && !session.answered && !success && !requested && (
             <button
+              type="button"
               onClick={handleManualRequest}
               disabled={locating || requesting || secondsLeft <= 0}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-danger-200 bg-danger-50 text-sm font-semibold text-danger-700 transition hover:bg-danger-100 disabled:cursor-not-allowed disabled:opacity-50"

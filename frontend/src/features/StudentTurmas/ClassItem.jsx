@@ -36,17 +36,7 @@ export function ClassItem({ data, onOpenCheckin, onClick }) {
         </div>
 
         {hasActiveSession ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation()
-              onOpenCheckin?.(data.activeSession.id)
-            }}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-primary-800 px-3 text-sm font-semibold text-neutral-0 transition hover:bg-primary-900"
-          >
-            <BellRing className="h-4 w-4" />
-            Responder
-          </button>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
         ) : answered ? (
           <CheckCircle2 className="h-5 w-5 shrink-0 text-success-600" />
         ) : (

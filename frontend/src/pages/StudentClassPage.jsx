@@ -158,10 +158,10 @@ export default function StudentClassPage() {
               <button
                 type="button"
                 onClick={() => handleOpenCheckin(activeAttendance.id)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-success-700 px-4 text-sm font-semibold text-white transition hover:bg-success-800"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-success-100 px-4 text-sm font-semibold text-black transition hover:bg-success-200"
               >
-                <BellRing className="h-4 w-4" />
-                Responder agora
+                <BellRing className="h-4 w-4 text-black"/>
+                <span className="text-black">Responder agora</span>
               </button>
             </div>
           </section>
