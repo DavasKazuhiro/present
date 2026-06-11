@@ -21,6 +21,15 @@ function distanceMeters(a, b) {
   return Math.round(2 * earth * Math.asin(Math.sqrt(h)))
 }
 
+function offsetFrom(lat, lon, metersNorth = 0, metersEast = 0) {
+  const R = 6378137
+  const dLat = metersNorth / R
+  const dLon = metersEast / (R * Math.cos((lat * Math.PI) / 180))
+  const newLat = lat + (dLat * 180) / Math.PI
+  const newLon = lon + (dLon * 180) / Math.PI
+  return { latitude: newLat, longitude: newLon, accuracy: Math.round(Math.max(Math.abs(metersNorth), Math.abs(metersEast))) }
+}
+
 function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   const valueTone =
     tone === 'danger'
@@ -40,7 +49,7 @@ function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   )
 }
 
-export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
+export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = 50 }) {
   const [location, setLocation] = useState(null)
   const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -63,7 +72,12 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
     setLocating(true)
     setError('')
     try {
-      setLocation(await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 12000 }))
+      if (mockDistance != null && session && typeof mockDistance === 'number') {
+        const mocked = offsetFrom(Number(session.latitude), Number(session.longitude), 0, Number(mockDistance))
+        setLocation(mocked)
+      } else {
+        setLocation(await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 5000 }))
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível ler sua localização.')
     } finally {
@@ -116,109 +130,111 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
   const statusTone = session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-sm overflow-hidden rounded-2xl bg-bg-card shadow-card">
-        <button
-          onClick={onClose}
-          aria-label="Fechar"
-          className="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-neutral-100"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-neutral-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
-        <div className="flex flex-col items-center px-6 pb-5 pt-8 text-center">
-          <div className={`relative flex h-20 w-20 items-center justify-center rounded-full ${statusTone === 'danger' ? 'bg-danger-50' : 'bg-success-50'}`}>
-            <MapPin className={`relative h-8 w-8 ${statusTone === 'danger' ? 'text-danger-600' : 'text-success-600'}`} />
+          <div className="flex flex-col items-center px-6 pb-5 pt-8 text-center">
+            <div className={`relative flex h-20 w-20 items-center justify-center rounded-full ${statusTone === 'danger' ? 'bg-danger-50' : 'bg-success-50'}`}>
+              <MapPin className={`relative h-8 w-8 ${statusTone === 'danger' ? 'text-danger-600' : 'text-success-600'}`} />
+            </div>
+
+            <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-success-400" />
+              Chamada ativa
+            </div>
+
+            <h2 className="mt-2 text-2xl font-bold text-text-primary">Confirmar presença</h2>
+            <p className="mt-1 text-sm text-text-secondary">
+              {session.subject} · {session.className}
+            </p>
           </div>
 
-          <div className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-success-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-success-400" />
-            Chamada ativa
-          </div>
-
-          <h2 className="mt-2 text-2xl font-bold text-text-primary">Confirmar presença</h2>
-          <p className="mt-1 text-sm text-text-secondary">
-            {session.subject} · {session.className}
-          </p>
-        </div>
-
-        <div className="mx-6 grid grid-cols-2 gap-4 rounded-lg bg-neutral-50 p-4">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Tempo restante</div>
-            <div className="mt-1 text-2xl font-bold tabular-nums text-text-primary">{timeLeft}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Localização</div>
-            <div className={`mt-1 inline-flex items-center gap-1 text-sm font-semibold ${outOfRange ? 'text-danger-600' : 'text-success-600'}`}>
-              {locating ? (
-                'Localizando...'
-              ) : outOfRange ? (
-                <>
-                  <AlertTriangle className="h-4 w-4" />
-                  Fora do raio
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4" />
-                  No raio
-                </>
-              )}
+          <div className="mx-6 grid grid-cols-2 gap-4 rounded-lg bg-neutral-50 p-4">
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Tempo restante</div>
+              <div className="mt-1 text-2xl font-bold tabular-nums text-text-primary">{timeLeft}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">Localização</div>
+              <div className={`mt-1 inline-flex items-center gap-1 text-sm font-semibold ${outOfRange ? 'text-danger-600' : 'text-success-600'}`}>
+                {locating ? (
+                  'Localizando...'
+                ) : outOfRange ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    Fora do raio
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    No raio
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="px-6 pt-2">
-          <InfoRow
-            icon={Navigation}
-            label="Distância"
-            value={distance === null ? 'Aguardando GPS' : `${distance}m de ${session.radiusMeters}m`}
-            tone={outOfRange ? 'danger' : 'default'}
-          />
-          <InfoRow
-            icon={LocateFixed}
-            label="Precisão"
-            value={location?.accuracy ? `±${location.accuracy}m` : 'Calculando'}
-            tone={location?.accuracy && location.accuracy <= 25 ? 'success' : 'default'}
-          />
-          <InfoRow icon={User} label="Professor" value={session.professorName} />
-          <InfoRow
-            icon={ShieldCheck}
-            label="Validação GPS"
-            value={session.answered || success ? 'Respondida' : outOfRange ? 'Inválida' : 'Ativa'}
-            tone={session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'}
-          />
-        </div>
+          <div className="px-6 pt-2">
+            <InfoRow
+              icon={Navigation}
+              label="Distância"
+              value={distance === null ? 'Aguardando GPS' : `${distance}m de ${session.radiusMeters}m`}
+              tone={outOfRange ? 'danger' : 'default'}
+            />
+            <InfoRow
+              icon={LocateFixed}
+              label="Precisão"
+              value={location?.accuracy ? `±${location.accuracy}m` : 'Calculando'}
+              tone={location?.accuracy && location.accuracy <= 25 ? 'success' : 'default'}
+            />
+            <InfoRow icon={User} label="Professor" value={session.professorName} />
+            <InfoRow
+              icon={ShieldCheck}
+              label="Validação GPS"
+              value={session.answered || success ? 'Respondida' : outOfRange ? 'Inválida' : 'Ativa'}
+              tone={session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'}
+            />
+          </div>
 
-        {(error || success) && (
-          <p className={`mx-6 mt-3 rounded-lg px-3 py-2 text-center text-sm font-semibold ${success ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'}`}>
-            {success || error}
-          </p>
-        )}
+          {(error || success) && (
+            <p className={`mx-6 mt-3 rounded-lg px-3 py-2 text-center text-sm font-semibold ${success ? 'bg-success-50 text-success-600' : 'bg-danger-50 text-danger-600'}`}>
+              {success || error}
+            </p>
+          )}
 
-        <div className="space-y-2 p-6 pt-4">
-          <button
-            onClick={handleConfirm}
-            disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success) || secondsLeft <= 0}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-action-primary text-sm font-semibold text-action-primary-text shadow-card transition hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Check className="h-4 w-4" />
-            {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : secondsLeft <= 0 ? 'Chamada encerrada' : 'Confirmar check-in'}
-          </button>
+          <div className="space-y-2 p-6 pt-4">
+            <button
+              onClick={handleConfirm}
+              disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success) || secondsLeft <= 0}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-action-primary text-sm font-semibold text-action-primary-text shadow-card transition hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Check className="h-4 w-4" />
+              {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : secondsLeft <= 0 ? 'Chamada encerrada' : 'Confirmar check-in'}
+            </button>
 
-          <button
-            onClick={refreshLocation}
-            disabled={locating || submitting}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-bg-card text-sm font-semibold text-primary-700 transition hover:bg-primary-50 disabled:opacity-50"
-          >
-            <LocateFixed className="h-4 w-4" />
-            Atualizar localização
-          </button>
+            <button
+              onClick={refreshLocation}
+              disabled={locating || submitting}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-bg-card text-sm font-semibold text-primary-700 transition hover:bg-primary-50 disabled:opacity-50"
+            >
+              <LocateFixed className="h-4 w-4" />
+              Atualizar localização
+            </button>
 
-          <p className={`text-center text-xs ${outOfRange ? 'text-danger-600' : 'text-text-secondary'}`}>
-            {outOfRange
-              ? 'Entre no raio permitido e toque em atualizar localização para tentar novamente.'
-              : 'Sua localização será validada pelo servidor no momento do envio.'}
-          </p>
+            <p className={`text-center text-xs ${outOfRange ? 'text-danger-600' : 'text-text-secondary'}`}>
+              {outOfRange
+                ? 'Entre no raio permitido e toque em atualizar localização para tentar novamente.'
+                : 'Sua localização será validada pelo servidor no momento do envio.'}
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -117,7 +117,7 @@ export default function TeacherClassPage() {
     setMessage('')
 
     try {
-      const location = await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 12000 })
+      const location = await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 5000 })
       const result = await openAttendance({
         turmaId,
         titulo: dados.titulo,
