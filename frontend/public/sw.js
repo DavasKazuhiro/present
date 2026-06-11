@@ -1,4 +1,4 @@
-const CACHE_NAME = 'present-pwa-v1'
+const CACHE_NAME = 'present-pwa-v2'
 const APP_SHELL = ['/', '/manifest.webmanifest', '/present-icon.svg']
 
 self.addEventListener('install', (event) => {
@@ -18,9 +18,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request
+  const url = new URL(request.url)
 
   if (request.method !== 'GET') return
-  if (new URL(request.url).pathname.startsWith('/auth')) return
+  if (url.pathname.startsWith('/api/')) return
+  if (url.pathname.startsWith('/auth')) return
 
   if (request.mode === 'navigate') {
     event.respondWith(

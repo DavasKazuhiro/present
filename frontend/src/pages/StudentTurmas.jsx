@@ -38,8 +38,22 @@ export default function StudentTurmas() {
 
   useEffect(() => {
     loadStudentData()
-    const id = setInterval(loadStudentData, 8000)
-    return () => clearInterval(id)
+    const id = setInterval(loadStudentData, 5000)
+
+    function refreshWhenVisible() {
+      if (!document.hidden) loadStudentData()
+    }
+
+    window.addEventListener('focus', loadStudentData)
+    window.addEventListener('online', loadStudentData)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('focus', loadStudentData)
+      window.removeEventListener('online', loadStudentData)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
   }, [])
 
   async function handleOpenCheckin(chamadaId) {

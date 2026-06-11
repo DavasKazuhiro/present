@@ -107,7 +107,9 @@ export async function getAttendanceDetail(turmaId, chamadaId) {
 }
 
 export async function getStudentNotifications() {
-  const { data } = await api.get('/sessions/notifications')
+  const { data } = await api.get('/sessions/notifications', {
+    params: { t: Date.now() },
+  })
   return data.notifications ?? []
 }
 
