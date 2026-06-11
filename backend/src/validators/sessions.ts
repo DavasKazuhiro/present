@@ -15,3 +15,9 @@ export const CheckInSchema = z.object({
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
 })
+
+export const ManualRequestSchema = z.object({
+  chamadaId: z.coerce.number().int().positive(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
+})

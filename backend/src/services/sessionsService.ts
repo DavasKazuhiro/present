@@ -356,6 +356,209 @@ export async function studentCheckIn(input: {
   }
 }
 
+export async function requestManualCheckIn(input: {
+  studentUsuarioId: string
+  chamadaId: number
+  latitude?: number
+  longitude?: number
+}) {
+  const alunoId = await getAlunoId(input.studentUsuarioId)
+
+  const session = await get<{
+    id: number
+    turma_id: number
+    latitude: string | number
+    longitude: string | number
+    raio_metros: number
+  }>(
+    `SELECT id, turma_id, latitude, longitude, raio_metros
+     FROM chamadas
+     WHERE id = ?
+       AND aberta_ate > NOW()
+       AND encerrada_em IS NULL
+       AND status = 'open'
+     LIMIT 1`,
+    [input.chamadaId]
+  )
+
+  if (!session) throw new Error('Chamada expirada ou não encontrada.')
+
+  const enrolled = await get<{ turma_id: number }>(
+    `SELECT turma_id
+     FROM turma_alunos
+     WHERE turma_id = ? AND aluno_id = ?
+       AND status = 'active'
+     LIMIT 1`,
+    [session.turma_id, alunoId]
+  )
+  if (!enrolled) throw new Error('Você não está matriculado nesta matéria.')
+
+  const alreadyAnswered = await get<{ chamada_id: number }>(
+    `SELECT chamada_id
+     FROM chamada_alunos
+     WHERE chamada_id = ? AND aluno_id = ?
+     LIMIT 1`,
+    [session.id, alunoId]
+  )
+  if (alreadyAnswered) throw new Error('Você já respondeu esta chamada.')
+
+  const distanceMeters = input.latitude != null && input.longitude != null
+    ? haversineDistanceMeters(
+        { latitude: Number(session.latitude), longitude: Number(session.longitude) },
+        { latitude: input.latitude, longitude: input.longitude }
+      )
+    : null
+
+  if (distanceMeters != null && distanceMeters <= Number(session.raio_metros)) {
+    throw new Error('Você está dentro do raio. Use o check-in normal.')
+  }
+
+  try {
+    const insert = await run(
+      `INSERT INTO chamada_solicitacoes
+         (chamada_id, aluno_id, latitude, longitude, distancia_metros)
+       VALUES (?, ?, ?, ?, ?)`,
+      [session.id, alunoId, input.latitude ?? null, input.longitude ?? null, distanceMeters != null ? Math.round(distanceMeters * 100) / 100 : null]
+    )
+
+    const request = await get<{
+      id: number
+      chamada_id: number
+      aluno_id: number
+      status: string
+      created_at: string
+      latitude: string | number | null
+      longitude: string | number | null
+      distancia_metros: number | null
+    }>(
+      `SELECT id, chamada_id, aluno_id, status, created_at, latitude, longitude, distancia_metros
+       FROM chamada_solicitacoes
+       WHERE id = ?
+       LIMIT 1`,
+      [insert.insertId]
+    )
+
+    return request
+  } catch (err: any) {
+    if (String(err?.message ?? '').toUpperCase().includes('DUPLICATE')) {
+      throw new Error('Já existe uma solicitação pendente para esta chamada.')
+    }
+    throw err
+  }
+}
+
+export async function listAttendanceRequests(input: {
+  professorUsuarioId: string
+  turmaId: number
+  chamadaId: number
+}) {
+  const professorId = await getProfessorId(input.professorUsuarioId)
+  const turma = await get<{ id: number }>(
+    'SELECT id FROM turmas WHERE id = ? AND professor_id = ? LIMIT 1',
+    [input.turmaId, professorId]
+  )
+  if (!turma) throw new Error('Turma não encontrada para este professor.')
+
+  const requests = await all<{
+    id: number
+    alunoId: number
+    name: string
+    email: string
+    status: string
+    createdAt: string
+    latitude: string | number | null
+    longitude: string | number | null
+    distanceMeters: number | null
+  }>(
+    `SELECT
+       cs.id,
+       cs.aluno_id AS alunoId,
+       u.nome AS name,
+       u.email AS email,
+       cs.status,
+       cs.created_at AS createdAt,
+       cs.latitude,
+       cs.longitude,
+       cs.distancia_metros AS distanceMeters
+     FROM chamada_solicitacoes cs
+     INNER JOIN alunos a ON a.id = cs.aluno_id
+     INNER JOIN usuarios u ON u.id = a.usuario_id
+     INNER JOIN chamadas c ON c.id = cs.chamada_id
+     WHERE cs.chamada_id = ?
+       AND c.turma_id = ?
+       AND cs.status = 'pending'
+     ORDER BY cs.created_at ASC`,
+    [input.chamadaId, input.turmaId]
+  )
+
+  return requests.map((request) => ({
+    ...request,
+    distanceMeters: request.distanceMeters != null ? Number(request.distanceMeters) : null,
+  }))
+}
+
+export async function approveManualCheckIn(input: {
+  professorUsuarioId: string
+  requestId: number
+}) {
+  const professorId = await getProfessorId(input.professorUsuarioId)
+  const request = await get<{
+    id: number
+    chamada_id: number
+    aluno_id: number
+    status: string
+    latitude: string | number | null
+    longitude: string | number | null
+    distancia_metros: number | null
+  }>(
+    `SELECT cs.*
+     FROM chamada_solicitacoes cs
+     INNER JOIN chamadas c ON c.id = cs.chamada_id
+     INNER JOIN turmas t ON t.id = c.turma_id
+     WHERE cs.id = ?
+       AND t.professor_id = ?
+     LIMIT 1`,
+    [input.requestId, professorId]
+  )
+
+  if (!request) throw new Error('Solicitação não encontrada.')
+  if (request.status !== 'pending') throw new Error('Solicitação já foi processada.')
+
+  const existing = await get<{ chamada_id: number }>(
+    `SELECT chamada_id
+     FROM chamada_alunos
+     WHERE chamada_id = ? AND aluno_id = ?
+     LIMIT 1`,
+    [request.chamada_id, request.aluno_id]
+  )
+  if (existing) {
+    await run(
+      `UPDATE chamada_solicitacoes
+       SET status = 'approved', resolved_at = NOW()
+       WHERE id = ?`,
+      [request.id]
+    )
+    return { requestId: request.id, approved: true, alreadyRecorded: true }
+  }
+
+  await run(
+    `INSERT INTO chamada_alunos (chamada_id, aluno_id, presente, data_resposta, latitude, longitude, distancia_metros)
+     VALUES (?, ?, 1, NOW(), ?, ?, ?)`,
+    [request.chamada_id, request.aluno_id, request.latitude ?? null, request.longitude ?? null, request.distancia_metros ?? null]
+  )
+
+  await run(
+    `UPDATE chamada_solicitacoes
+     SET status = 'approved', resolved_at = NOW()
+     WHERE id = ?`,
+    [request.id]
+  )
+
+  await refreshSessionCounters(request.chamada_id)
+
+  return { requestId: request.id, approved: true, alreadyRecorded: false }
+}
+
 export async function listClassSessions(input: { professorUsuarioId: string; turmaId: number }) {
   const professorId = await getProfessorId(input.professorUsuarioId)
   const turma = await get<{ id: number }>(

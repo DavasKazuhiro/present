@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Check, LocateFixed, MapPin, Navigation, ShieldCheck, User, X } from 'lucide-react'
 import { getPrecisePosition } from '../utils/geolocation'
+import { requestManualCheckIn } from '../services/classes.service'
 
 function formatTime(totalSeconds = 0) {
   const safe = Math.max(0, Number(totalSeconds) || 0)
@@ -49,10 +50,12 @@ function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
   )
 }
 
-export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = 50 }) {
+export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDistance = null }) {
   const [location, setLocation] = useState(null)
   const [locating, setLocating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [requesting, setRequesting] = useState(false)
+  const [requested, setRequested] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [secondsLeft, setSecondsLeft] = useState(0)
@@ -123,8 +126,31 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDis
       setError(result.error)
       return
     }
-
     setSuccess('Presença confirmada.')
+  }
+
+  async function handleManualRequest() {
+    if (!session || session.answered || secondsLeft <= 0 || !outOfRange) return
+
+    setRequesting(true)
+    setError('')
+    try {
+      const result = await requestManualCheckIn({
+        chamadaId: session.id,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+      })
+      setRequested(result.success)
+      if (!result.success) {
+        setError(result.error)
+        return
+      }
+      setSuccess('Solicitação de chamada manual enviada para o professor.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível enviar a solicitação.')
+    } finally {
+      setRequesting(false)
+    }
   }
 
   const statusTone = session.answered || success ? 'success' : outOfRange ? 'danger' : 'success'
@@ -220,14 +246,15 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDis
               {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : secondsLeft <= 0 ? 'Chamada encerrada' : 'Confirmar check-in'}
             </button>
 
+          {(outOfRange || locating) && !session.answered && !success && !requested && (
             <button
-              onClick={refreshLocation}
-              disabled={locating || submitting}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-bg-card text-sm font-semibold text-primary-700 transition hover:bg-primary-50 disabled:opacity-50"
+              onClick={handleManualRequest}
+              disabled={locating || requesting || secondsLeft <= 0}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-danger-200 bg-danger-50 text-sm font-semibold text-danger-700 transition hover:bg-danger-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <LocateFixed className="h-4 w-4" />
-              Atualizar localização
+              {locating ? 'Aguardando localização...' : requesting ? 'Enviando...' : 'Solicitar chamada manual'}
             </button>
+          )}
 
             <p className={`text-center text-xs ${outOfRange ? 'text-danger-600' : 'text-text-secondary'}`}>
               {outOfRange

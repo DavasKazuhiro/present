@@ -3,7 +3,7 @@ import { asyncHandler } from '../middleware/asyncHandler'
 import { requireAuth } from '../middleware/requireAuth'
 import { requireRole } from '../middleware/requireRole'
 import { validateBody } from '../middleware/validateBody'
-import { CheckInSchema, OpenSessionSchema } from '../validators/sessions'
+import { CheckInSchema, ManualRequestSchema, OpenSessionSchema } from '../validators/sessions'
 import {
   closeClassSession,
   getAttendanceDetail,
@@ -12,6 +12,9 @@ import {
   listClassSessions,
   listStudentNotifications,
   openClassSession,
+  requestManualCheckIn,
+  approveManualCheckIn,
+  listAttendanceRequests,
   studentCheckIn,
 } from '../services/sessionsService'
 
@@ -95,6 +98,53 @@ router.post(
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err?.message ?? 'Falha no check-in.' })
     }
+  })
+)
+
+router.post(
+  '/manual-request',
+  requireAuth,
+  requireRole(['aluno']),
+  validateBody(ManualRequestSchema),
+  asyncHandler(async (req, res) => {
+    try {
+      const request = await requestManualCheckIn({
+        studentUsuarioId: req.user!.id,
+        chamadaId: req.body.chamadaId,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+      })
+      return res.json({ success: true, request })
+    } catch (err: any) {
+      return res.status(400).json({ success: false, error: err?.message ?? 'Falha ao solicitar chamada manual.' })
+    }
+  })
+)
+
+router.get(
+  '/teacher/classes/:turmaId/:chamadaId/requests',
+  requireAuth,
+  requireRole(['professor']),
+  asyncHandler(async (req, res) => {
+    const requests = await listAttendanceRequests({
+      professorUsuarioId: req.user!.id,
+      turmaId: Number(req.params.turmaId),
+      chamadaId: Number(req.params.chamadaId),
+    })
+    return res.json({ success: true, requests })
+  })
+)
+
+router.post(
+  '/:chamadaId/requests/:requestId/approve',
+  requireAuth,
+  requireRole(['professor']),
+  asyncHandler(async (req, res) => {
+    const approval = await approveManualCheckIn({
+      professorUsuarioId: req.user!.id,
+      requestId: Number(req.params.requestId),
+    })
+    return res.json({ success: true, approval })
   })
 )
 

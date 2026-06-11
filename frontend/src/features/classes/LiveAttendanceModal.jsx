@@ -14,7 +14,7 @@ function parseServerDate(value) {
   return new Date(String(value).replace(' ', 'T')).getTime()
 }
 
-export default function LiveAttendanceModal({ open, attendance, turma, onClose, onDismiss }) {
+export default function LiveAttendanceModal({ open, attendance, turma, manualRequests = [], loadingRequests = false, onApproveRequest, approvingRequestId, onClose, onDismiss }) {
   const totalSeconds = Math.max(1, (attendance?.duracao ?? 10) * 60)
   const [secondsLeft, setSecondsLeft] = useState(attendance?.secondsLeft ?? totalSeconds)
 
@@ -65,69 +65,107 @@ export default function LiveAttendanceModal({ open, attendance, turma, onClose, 
         </button>
 
         {/* Status */}
-        <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-success-600">
-            <span className="relative inline-flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-400 opacity-50" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-success-400" />
-            </span>
-            Chamada aberta
+        <div className="max-h-[calc(100vh-2rem)] overflow-y-auto">
+          <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-success-600">
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success-400 opacity-50" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success-400" />
+              </span>
+              Chamada aberta
+            </div>
+
+            <h1 className="mt-3.5 text-[22px] font-bold text-text-primary">
+              {attendance?.titulo}
+            </h1>
+            <p className="mt-0.5 text-sm text-text-secondary">
+              {turma.name} · {turma.section}
+            </p>
           </div>
 
-          <h1 className="mt-3.5 text-[22px] font-bold text-text-primary">
-            {attendance?.titulo}
-          </h1>
-          <p className="mt-0.5 text-sm text-text-secondary">
-            {turma.name} · {turma.section}
-          </p>
-        </div>
-
-        {/* Timer */}
-        <div className="mx-6 rounded-2xl bg-neutral-50 p-6 text-center">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
-            Tempo restante
+          {/* Timer */}
+          <div className="mx-6 rounded-2xl bg-neutral-50 p-6 text-center">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-text-secondary">
+              Tempo restante
+            </div>
+            <div className="mt-1 text-[56px] font-bold leading-tight tabular-nums text-primary-800">
+              {formatTime(secondsLeft)}
+            </div>
+            <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-neutral-200">
+              <div
+                className="h-full rounded-full bg-primary-400 transition-all duration-1000 ease-linear"
+                style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+              />
+            </div>
           </div>
-          <div className="mt-1 text-[56px] font-bold leading-tight tabular-nums text-primary-800">
-            {formatTime(secondsLeft)}
+
+          {/* Contador de presentes */}
+          <div className="flex items-center justify-center gap-2.5 px-6 pb-2 pt-7">
+            <Users className="h-[22px] w-[22px] text-primary-600" strokeWidth={1.75} />
+            <div className="text-3xl font-bold tabular-nums text-text-primary">
+              {presentCount}{' '}
+              <span className="text-lg font-normal text-text-secondary">
+                de {turma.enrolledCount} presentes
+              </span>
+            </div>
           </div>
-          <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-neutral-200">
-            <div
-              className="h-full rounded-full bg-primary-400 transition-all duration-1000 ease-linear"
-              style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-            />
+
+          {/* Estado vazio */}
+          <div className="px-6 pb-6 pt-2 text-center">
+            <p className="text-[13px] leading-relaxed text-text-muted">
+              Aguardando os alunos confirmarem presença pelo aplicativo…
+            </p>
+          </div>
+
+          {manualRequests.length > 0 || loadingRequests ? (
+            <div className="mx-6 mb-4 rounded-2xl bg-neutral-50 p-4 text-left">
+              <div className="mb-3 flex items-center justify-between text-sm font-semibold text-text-primary">
+                <span>Solicitações manuais</span>
+                <span className="text-text-secondary text-xs">{loadingRequests ? 'Carregando...' : `${manualRequests.length} pendente(s)`}</span>
+              </div>
+              {manualRequests.length === 0 ? (
+                <p className="text-sm text-text-secondary">Nenhuma solicitação pendente.</p>
+              ) : (
+                <div className="space-y-3">
+                  {manualRequests.map((request) => (
+                    <div key={request.id} className="rounded-2xl border border-border-default bg-white p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-text-primary">{request.name}</p>
+                          <p className="text-xs text-text-secondary">{request.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onApproveRequest?.(request.id)}
+                          disabled={approvingRequestId === request.id}
+                          className="inline-flex h-9 items-center justify-center rounded-lg bg-success-600 px-3 text-sm font-semibold text-white transition hover:bg-success-700 disabled:opacity-50"
+                        >
+                          {approvingRequestId === request.id ? 'Aprovando...' : 'Aprovar'}
+                        </button>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-text-secondary">
+                        {request.distanceMeters != null && <span>{Math.round(request.distanceMeters)}m do professor</span>}
+                        <span>{new Date(request.createdAt).toLocaleTimeString('pt-BR')}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* Encerrar */}
+          <div className="border-t border-border-default px-6 pb-6 pt-[18px]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-danger-100 bg-danger-50 text-[15px] font-semibold text-danger-600 transition hover:bg-danger-100"
+            >
+              <SquareX className="h-[18px] w-[18px]" strokeWidth={1.75} />
+              Encerrar chamada
+            </button>
           </div>
         </div>
-
-        {/* Contador de presentes */}
-        <div className="flex items-center justify-center gap-2.5 px-6 pb-2 pt-7">
-          <Users className="h-[22px] w-[22px] text-primary-600" strokeWidth={1.75} />
-          <div className="text-3xl font-bold tabular-nums text-text-primary">
-            {presentCount}{' '}
-            <span className="text-lg font-normal text-text-secondary">
-              de {turma.enrolledCount} presentes
-            </span>
-          </div>
-        </div>
-
-        {/* Estado vazio */}
-        <div className="px-6 pb-6 pt-2 text-center">
-          <p className="text-[13px] leading-relaxed text-text-muted">
-            Aguardando os alunos confirmarem presença pelo aplicativo…
-          </p>
-        </div>
-
-        {/* Encerrar */}
-        <div className="border-t border-border-default px-6 pb-6 pt-[18px]">
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-danger-100 bg-danger-50 text-[15px] font-semibold text-danger-600 transition hover:bg-danger-100"
-          >
-            <SquareX className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            Encerrar chamada
-          </button>
-        </div>
-
       </div>
     </div>
   )

@@ -125,6 +125,29 @@ export async function confirmStudentCheckin(payload) {
   }
 }
 
+export async function requestManualCheckIn(payload) {
+  try {
+    const { data } = await api.post('/sessions/manual-request', payload)
+    return { success: true, request: data.request }
+  } catch (error) {
+    return { success: false, error: apiError(error, 'Não foi possível solicitar chamada manual.') }
+  }
+}
+
+export async function getAttendanceRequests(turmaId, chamadaId) {
+  const { data } = await api.get(`/sessions/teacher/classes/${turmaId}/${chamadaId}/requests`)
+  return data.requests ?? []
+}
+
+export async function approveManualCheckIn(chamadaId, requestId) {
+  try {
+    const { data } = await api.post(`/sessions/${chamadaId}/requests/${requestId}/approve`)
+    return { success: true, approval: data.approval }
+  } catch (error) {
+    return { success: false, error: apiError(error, 'Não foi possível aprovar a solicitação.') }
+  }
+}
+
 export async function getStudentClass(turmaId) {
   const { data } = await api.get(`/classes/student/${turmaId}`)
   return data.class

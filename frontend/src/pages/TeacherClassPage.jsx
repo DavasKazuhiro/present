@@ -8,8 +8,10 @@ import AttendanceList from '../features/classes/AttendanceList'
 import NewAttendanceModal from '../features/classes/NewAttendanceModal'
 import LiveAttendanceModal from '../features/classes/LiveAttendanceModal'
 import {
+  approveManualCheckIn,
   closeAttendance,
   enrollStudent,
+  getAttendanceRequests,
   getClassAttendances,
   getAttendanceDetail,
   getClassStudents,
@@ -34,6 +36,9 @@ export default function TeacherClassPage() {
   const navigate = useNavigate()
   const [modal, setModal] = useState('none')
   const [activeAttendance, setActiveAttendance] = useState(null)
+  const [manualRequests, setManualRequests] = useState([])
+  const [loadingRequests, setLoadingRequests] = useState(false)
+  const [approvingRequestId, setApprovingRequestId] = useState(null)
   const [turma, setTurma] = useState(null)
   const [students, setStudents] = useState([])
   const [attendances, setAttendances] = useState([])
@@ -108,6 +113,26 @@ export default function TeacherClassPage() {
     return () => clearInterval(id)
   }, [activeAttendance?.chamadaId, turmaId])
 
+  useEffect(() => {
+    if (!activeAttendance?.chamadaId) {
+      setManualRequests([])
+      return
+    }
+
+    async function loadRequests() {
+      try {
+        const requests = await getAttendanceRequests(turmaId, activeAttendance.chamadaId)
+        setManualRequests(requests)
+      } catch (err) {
+        console.error('Erro ao carregar solicitações:', err)
+      }
+    }
+
+    loadRequests()
+    const interval = setInterval(loadRequests, 2000)
+    return () => clearInterval(interval)
+  }, [activeAttendance?.chamadaId, turmaId])
+
   function handleAbrirChamadaDetalhe(attendanceId) {
     navigate(`/teacher/classes/${turmaId}/attendances/${attendanceId}`)
   }
@@ -160,6 +185,29 @@ export default function TeacherClassPage() {
     await loadClass()
   }
 
+  async function handleApproveRequest(requestId) {
+    if (!activeAttendance?.chamadaId) return
+    setApprovingRequestId(requestId)
+    try {
+      const result = await approveManualCheckIn(activeAttendance.chamadaId, requestId)
+      if (result.success) {
+        const requests = await getAttendanceRequests(turmaId, activeAttendance.chamadaId)
+        setManualRequests(requests)
+        await loadClass()
+      }
+    } finally {
+      setApprovingRequestId(null)
+    }
+  }
+
+  async function handleAbrirChamada() {
+    if (activeAttendance?.chamadaId) {
+      setModal('live')
+    } else {
+      setModal('config')
+    }
+  }
+
   async function handleAddStudent(event) {
     event.preventDefault()
     if (!email.trim()) return
@@ -196,7 +244,8 @@ export default function TeacherClassPage() {
 
   async function handleCopyInvite() {
     if (!invite?.token) return
-    await navigator.clipboard?.writeText(inviteUrl)
+    const url = `${window.location.origin}/join/${invite.token}`
+    await navigator.clipboard?.writeText(url)
     setMessage('Link de convite copiado.')
   }
 
@@ -298,7 +347,7 @@ export default function TeacherClassPage() {
         )}
 
         <ClassHeader info={{ ...turma, enrolledCount: students.length }} role="teacher"/>
-        <ClassActions onAbrirChamada={() => setModal('config')} />
+        <ClassActions onAbrirChamada={handleAbrirChamada} />
 
         <section className="grid grid-cols-[0.8fr_1.2fr] gap-4 max-lg:grid-cols-1">
           <div className="rounded-lg border border-border-default bg-bg-card p-5 shadow-card">
@@ -439,6 +488,10 @@ export default function TeacherClassPage() {
           open={modal === 'live'}
           attendance={{ ...activeAttendance, opening }}
           turma={{ ...turma, enrolledCount: students.length }}
+          manualRequests={manualRequests}
+          loadingRequests={loadingRequests}
+          approvingRequestId={approvingRequestId}
+          onApproveRequest={handleApproveRequest}
           onClose={handleEndAttendance}
           onDismiss={() => setModal('none')}
         />

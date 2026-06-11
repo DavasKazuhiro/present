@@ -63,6 +63,31 @@ CREATE TABLE `chamada_alunos` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `chamada_solicitacoes`
+--
+
+DROP TABLE IF EXISTS `chamada_solicitacoes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+CREATE TABLE `chamada_solicitacoes` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `chamada_id` int NOT NULL,
+  `aluno_id` int NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `resolved_at` timestamp NULL DEFAULT NULL,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `distancia_metros` decimal(10,2) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `chamada_aluno` (`chamada_id`,`aluno_id`),
+  KEY `aluno_id` (`aluno_id`),
+  KEY `chamada_id` (`chamada_id`),
+  CONSTRAINT `chamada_solicitacoes_ibfk_1` FOREIGN KEY (`chamada_id`) REFERENCES `chamadas` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `chamada_solicitacoes_ibfk_2` FOREIGN KEY (`aluno_id`) REFERENCES `alunos` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Dumping data for table `chamada_alunos`
 --
 
