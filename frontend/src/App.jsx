@@ -8,6 +8,7 @@ import { getCurrentUser, getDashboardPath, validateSession } from './services/au
 import TeacherClassPage from './pages/TeacherClassPage'
 import AttendanceDetailPage from './pages/AttendanceDetailPage'
 import JoinClassPage from './pages/JoinClassPage'
+import StudentClassPage from './pages/StudentClassPage'
 
 function ProtectedRoute({ allowedRoles, children }) {
   const user = getCurrentUser()
@@ -115,6 +116,15 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['professor']}>
             <AttendanceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/student/classes/:id"
+        element={
+          <ProtectedRoute allowedRoles={['aluno']}>
+            <StudentClassPage />
           </ProtectedRoute>
         }
       />

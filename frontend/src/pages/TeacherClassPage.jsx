@@ -273,7 +273,7 @@ export default function TeacherClassPage() {
           </div>
         )}
 
-        <ClassHeader info={{ ...turma, enrolledCount: students.length }} />
+        <ClassHeader info={{ ...turma, enrolledCount: students.length }} role="teacher"/>
         <ClassActions onAbrirChamada={() => setModal('config')} />
 
         <section className="grid grid-cols-[0.8fr_1.2fr] gap-4 max-lg:grid-cols-1">

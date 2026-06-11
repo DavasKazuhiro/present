@@ -6,7 +6,7 @@ import { AppLayout } from '../layout/AppLayout/AppLayout'
 import ClassHeader from '../features/classes/ClassHeader'
 
 import {
-  getClassAttendances,
+  getClassAttendancesByStudent,
   getStudentClass,
 } from '../services/classes.service'
 
@@ -28,7 +28,7 @@ export default function StudentClassPage() {
     try {
       const [classData, classAttendances] = await Promise.all([
         getStudentClass(turmaId),
-        getClassAttendances(turmaId),
+        getClassAttendancesByStudent(turmaId)
       ])
 
       setTurma(classData)
@@ -109,7 +109,7 @@ export default function StudentClassPage() {
           </div>
         )}
 
-        <ClassHeader info={turma} />
+        <ClassHeader info={turma} role="student"/>
 
         {/* Painel de chamada ativa */}
         {activeAttendance ? (

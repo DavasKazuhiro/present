@@ -2,12 +2,12 @@ import Card from "@/components/common/Card/Card";
 import Badge from "@/components/common/Badge/Badge";   
 import { BellRing, CheckCircle2, ChevronRight } from "lucide-react";
 
-export function ClassItem({ data, onOpenCheckin }) {
+export function ClassItem({ data, onOpenCheckin, onClick }) {
   const hasActiveSession = Boolean(data.activeSession && !data.activeSession.answered)
   const answered = Boolean(data.activeSession?.answered)
 
   return (
-    <Card className="bg-neutral-0 hover:border-primary-300">
+    <Card className="bg-neutral-0 hover:border-primary-300" onClick={onClick}>
       <div className="flex items-center gap-5">
         <div className="flex flex-col items-center justify-center rounded-xl bg-muted px-4 py-3 text-center">
           <span className="text-xs font-medium text-muted-foreground">início</span>

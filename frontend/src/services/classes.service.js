@@ -124,3 +124,39 @@ export async function confirmStudentCheckin(payload) {
     return { success: false, error: apiError(error, 'Não foi possível responder a chamada.') }
   }
 }
+
+export async function getStudentClass(turmaId) {
+  // Simulando o retorno da API
+  return {
+    id: turmaId,
+    name: "Cálculo Diferencial e Integral I",
+    section: "Turma A - Noturno"
+  }
+}
+
+export async function getClassAttendancesByStudent(alunoId, turmaId) {
+  // Simulando a lista de chamadas
+  return [
+    {
+      id: 1,
+      title: "Chamada Regular - Semana 4",
+      isOpen: true, // Isso vai ativar o card de "Chamada em andamento"
+      createdAt: "2026-06-10T19:00:00.000Z",
+      responded: false
+    },
+    {
+      id: 2,
+      title: "Chamada Regular - Semana 3",
+      isOpen: false,
+      createdAt: "2026-06-03T19:00:00.000Z",
+      responded: true
+    },
+    {
+      id: 3,
+      title: "Aula Extra - Sábado",
+      isOpen: false,
+      createdAt: "2026-05-30T09:00:00.000Z",
+      responded: false
+    }
+  ]
+}
