@@ -8,6 +8,7 @@ import {
   closeClassSession,
   getAttendanceDetail,
   getStudentSession,
+  listStudentClassSessions,
   listClassSessions,
   listStudentNotifications,
   openClassSession,
@@ -114,6 +115,19 @@ router.get(
   asyncHandler(async (req, res) => {
     const session = await getStudentSession(req.user!.id, Number(req.params.chamadaId))
     return res.json({ success: true, session })
+  })
+)
+
+router.get(
+  '/student/classes/:turmaId',
+  requireAuth,
+  requireRole(['aluno']),
+  asyncHandler(async (req, res) => {
+    const sessions = await listStudentClassSessions({
+      studentUsuarioId: req.user!.id,
+      turmaId: Number(req.params.turmaId),
+    })
+    return res.json({ success: true, sessions })
   })
 )
 

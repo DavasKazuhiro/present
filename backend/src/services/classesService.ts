@@ -395,6 +395,74 @@ export async function listStudentClasses(usuarioId: string) {
   }))
 }
 
+export async function getStudentClass(usuarioId: string, turmaId: number) {
+  const alunoId = await getAlunoId(usuarioId)
+  const rows = await all<
+    TeacherClassRow & {
+      professor_name: string
+      active_session_id: number | null
+      active_expires_at: string | null
+      active_radius: number | null
+      active_answered: number
+    }
+  >(
+    `SELECT
+       t.id,
+       t.nome,
+       t.disciplina,
+       t.curso,
+       t.descricao,
+       t.cor,
+       t.turno,
+       t.hora_inicio,
+       t.hora_fim,
+       0 AS enrolled_count,
+       COUNT(DISTINCT c_all.id) AS attendances_done,
+       COUNT(DISTINCT ca_all.aluno_id, ca_all.chamada_id) AS present_count,
+       COUNT(DISTINCT c_all.id) AS possible_count,
+       NULL AS open_session_id,
+       up.nome AS professor_name,
+       c_open.id AS active_session_id,
+       c_open.aberta_ate AS active_expires_at,
+       c_open.raio_metros AS active_radius,
+       CASE WHEN ca_open.aluno_id IS NULL THEN 0 ELSE 1 END AS active_answered
+     FROM turma_alunos ta
+     INNER JOIN turmas t ON t.id = ta.turma_id
+     INNER JOIN professores p ON p.id = t.professor_id
+     INNER JOIN usuarios up ON up.id = p.usuario_id
+     LEFT JOIN chamadas c_all ON c_all.turma_id = t.id
+     LEFT JOIN chamada_alunos ca_all
+       ON ca_all.chamada_id = c_all.id AND ca_all.aluno_id = ? AND ca_all.presente = 1
+     LEFT JOIN chamadas c_open
+       ON c_open.turma_id = t.id
+      AND c_open.aberta_ate > NOW()
+      AND c_open.encerrada_em IS NULL
+      AND c_open.status = 'open'
+     LEFT JOIN chamada_alunos ca_open
+       ON ca_open.chamada_id = c_open.id AND ca_open.aluno_id = ?
+     WHERE ta.aluno_id = ? AND ta.turma_id = ? AND ta.status = 'active'
+     GROUP BY t.id, c_open.id, ca_open.aluno_id
+     LIMIT 1`,
+    [alunoId, alunoId, alunoId, turmaId]
+  )
+
+  if (!rows[0]) return null
+  const schedules = await listSchedulesForClassIds([rows[0].id])
+  const row = rows[0]
+  return {
+    ...mapClass({ ...row, enrolled_count: 0 }, schedules.get(row.id)),
+    professorName: row.professor_name,
+    activeSession: row.active_session_id
+      ? {
+          id: row.active_session_id,
+          expiresAt: row.active_expires_at,
+          radiusMeters: row.active_radius,
+          answered: Boolean(row.active_answered),
+        }
+      : null,
+  }
+}
+
 export async function getOrCreateInviteLink(usuarioId: string, turmaId: number) {
   const professorId = await getProfessorId(usuarioId)
   const turma = await get<{ id: number }>(

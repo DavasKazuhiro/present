@@ -1,6 +1,5 @@
 import { ClassItem } from "./ClassItem";
 import { useNavigate } from 'react-router-dom'
-import { getStudentClass, getClassAttendances } from '../../services/classes.service'
 
 export function ClassList({ items, onOpenCheckin }) {
   const navigate = useNavigate()

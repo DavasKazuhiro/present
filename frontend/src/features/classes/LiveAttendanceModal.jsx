@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Users, SquareX } from 'lucide-react'
+import { Users, SquareX, X } from 'lucide-react'
 
 // formata segundos -> "MM:SS"
 function formatTime(totalSeconds) {
@@ -8,41 +8,61 @@ function formatTime(totalSeconds) {
   return `${m}:${s}`
 }
 
-export default function LiveAttendanceModal({ open, attendance, turma, onClose }) {
-  // duração vem em minutos; guardo o total e o que falta em segundos
-  const totalSeconds = (attendance?.duracao ?? 10) * 60
-  const [secondsLeft, setSecondsLeft] = useState(totalSeconds)
+function parseServerDate(value) {
+  if (!value) return Number.NaN
+  if (value instanceof Date) return value.getTime()
+  return new Date(String(value).replace(' ', 'T')).getTime()
+}
 
-  // reinicia o timer toda vez que abre uma chamada nova
-  useEffect(() => {
-    if (open) setSecondsLeft(totalSeconds)
-  }, [open, totalSeconds])
+export default function LiveAttendanceModal({ open, attendance, turma, onClose, onDismiss }) {
+  const totalSeconds = Math.max(1, (attendance?.duracao ?? 10) * 60)
+  const [secondsLeft, setSecondsLeft] = useState(attendance?.secondsLeft ?? totalSeconds)
 
-  // conta pra baixo enquanto estiver aberto; encerra sozinho no zero
   useEffect(() => {
     if (!open) return
 
-    const id = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(id)
-          onClose() // tempo acabou = encerra
-          return 0
+    function calculateRemaining() {
+      if (attendance?.expiresAt) {
+        const expiresAt = parseServerDate(attendance.expiresAt)
+        if (!Number.isNaN(expiresAt)) {
+          return Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000))
         }
-        return prev - 1
-      })
+      }
+      return Math.max(0, Number(attendance?.secondsLeft ?? totalSeconds))
+    }
+
+    setSecondsLeft(calculateRemaining())
+    const id = setInterval(() => {
+      setSecondsLeft(calculateRemaining())
     }, 1000)
 
     return () => clearInterval(id)
-  }, [open, onClose])
+  }, [open, attendance?.expiresAt, attendance?.secondsLeft, totalSeconds])
+
+  useEffect(() => {
+    if (!open) return
+    const id = setInterval(() => {
+      if (secondsLeft <= 0) onDismiss?.()
+    }, 1000)
+    return () => clearInterval(id)
+  }, [open, secondsLeft, onDismiss])
 
   if (!open) return null
 
   const progress = (secondsLeft / totalSeconds) * 100
+  const presentCount = Number(attendance?.present ?? 0)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-900/55 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-bg-card shadow-modal">
+      <div className="relative w-full max-w-[420px] overflow-hidden rounded-2xl bg-bg-card shadow-modal">
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Fechar modal"
+          className="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full text-text-secondary transition hover:bg-neutral-100"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
         {/* Status */}
         <div className="flex flex-col items-center px-6 pb-6 pt-8 text-center">
@@ -73,7 +93,7 @@ export default function LiveAttendanceModal({ open, attendance, turma, onClose }
           <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-neutral-200">
             <div
               className="h-full rounded-full bg-primary-400 transition-all duration-1000 ease-linear"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
             />
           </div>
         </div>
@@ -82,7 +102,7 @@ export default function LiveAttendanceModal({ open, attendance, turma, onClose }
         <div className="flex items-center justify-center gap-2.5 px-6 pb-2 pt-7">
           <Users className="h-[22px] w-[22px] text-primary-600" strokeWidth={1.75} />
           <div className="text-3xl font-bold tabular-nums text-text-primary">
-            0{' '}
+            {presentCount}{' '}
             <span className="text-lg font-normal text-text-secondary">
               de {turma.enrolledCount} presentes
             </span>

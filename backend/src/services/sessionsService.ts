@@ -24,6 +24,10 @@ function formatDate(value: Date | string) {
   return String(value).slice(0, 10)
 }
 
+function formatTime(value: string) {
+  return String(value).slice(0, 5)
+}
+
 async function getProfessorId(usuarioId: string) {
   const professor = await get<{ id: number }>(
     'SELECT id FROM professores WHERE usuario_id = ? LIMIT 1',
@@ -367,6 +371,8 @@ export async function listClassSessions(input: { professorUsuarioId: string; tur
     date: string
     time: string
     durationMin: number
+    expiresAt: string
+    secondsLeft: number
     present: number
     absent: number
     rate: number
@@ -379,6 +385,8 @@ export async function listClassSessions(input: { professorUsuarioId: string; tur
        DATE_FORMAT(c.data_chamada, '%Y-%m-%d') AS date,
        DATE_FORMAT(c.data_registro, '%H:%i') AS time,
        GREATEST(1, TIMESTAMPDIFF(MINUTE, c.data_registro, c.aberta_ate)) AS durationMin,
+       c.aberta_ate AS expiresAt,
+       GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), c.aberta_ate)) AS secondsLeft,
        COUNT(DISTINCT ca.aluno_id) AS present,
        GREATEST(COUNT(DISTINCT ta.aluno_id) - COUNT(DISTINCT ca.aluno_id), 0) AS absent,
        CASE
@@ -582,4 +590,55 @@ export async function getStudentSession(usuarioId: string, chamadaId: number) {
     longitude: Number(session.longitude),
     answered: Boolean(session.answered),
   }
+}
+
+export async function listStudentClassSessions(input: {
+  studentUsuarioId: string
+  turmaId: number
+}) {
+  const alunoId = await getAlunoId(input.studentUsuarioId)
+  const enrolled = await get<{ turma_id: number }>(
+    `SELECT turma_id
+     FROM turma_alunos
+     WHERE turma_id = ? AND aluno_id = ? AND status = 'active'
+     LIMIT 1`,
+    [input.turmaId, alunoId]
+  )
+  if (!enrolled) throw new Error('Você não está matriculado nesta matéria.')
+
+  return all<{
+    id: number
+    title: string
+    createdAt: string
+    date: string
+    time: string
+    closesAt: string
+    secondsLeft: number
+    durationMin: number
+    isOpen: number
+    responded: number
+    present: number
+    distanceMeters: string | number | null
+    answeredAt: string | null
+  }>(
+    `SELECT
+       c.id,
+       COALESCE(c.titulo, CONCAT('Chamada ', c.id)) AS title,
+       c.data_registro AS createdAt,
+       DATE_FORMAT(c.data_chamada, '%Y-%m-%d') AS date,
+       DATE_FORMAT(c.data_registro, '%H:%i') AS time,
+       c.aberta_ate AS closesAt,
+       GREATEST(0, TIMESTAMPDIFF(SECOND, NOW(), c.aberta_ate)) AS secondsLeft,
+       GREATEST(1, TIMESTAMPDIFF(MINUTE, c.data_registro, c.aberta_ate)) AS durationMin,
+       CASE WHEN c.aberta_ate > NOW() AND c.encerrada_em IS NULL AND c.status = 'open' THEN 1 ELSE 0 END AS isOpen,
+       CASE WHEN ca.aluno_id IS NULL THEN 0 ELSE 1 END AS responded,
+       CASE WHEN ca.presente = 1 THEN 1 ELSE 0 END AS present,
+       ca.distancia_metros AS distanceMeters,
+       ca.data_resposta AS answeredAt
+     FROM chamadas c
+     LEFT JOIN chamada_alunos ca ON ca.chamada_id = c.id AND ca.aluno_id = ?
+     WHERE c.turma_id = ?
+     ORDER BY c.data_registro DESC, c.id DESC`,
+    [alunoId, input.turmaId]
+  )
 }

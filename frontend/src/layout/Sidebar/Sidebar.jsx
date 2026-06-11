@@ -6,12 +6,10 @@ import Logo from '../../components/common/Logo/Logo'
 const NAV_ITEMS = [
   { id: 'dashboard',  label: 'Dashboard',   icon: 'fa-solid fa-chart-pie' },
   { id: 'calendario', label: 'Calendário',  icon: 'fa-solid fa-calendar-days' },
-  { id: 'turmas',     label: 'Turmas',      icon: 'fa-solid fa-school' },
 ]
 
 const BOTTOM_ITEMS = [
   { id: 'configuracoes', label: 'Configurações', icon: 'fa-solid fa-gear' },
-  { id: 'ajustes',       label: 'Ajustes',       icon: 'fa-solid fa-sliders' },
 ]
 
 export function Sidebar({ activeRoute = 'dashboard', onNavigate }) {

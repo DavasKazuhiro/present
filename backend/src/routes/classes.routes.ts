@@ -7,6 +7,7 @@ import { CreateClassSchema, EnrollStudentSchema } from '../validators/classes'
 import {
   createClass,
   enrollStudentByEmail,
+  getStudentClass,
   getTeacherClass,
   getOrCreateInviteLink,
   joinClassByInvite,
@@ -128,6 +129,17 @@ router.get(
   asyncHandler(async (req, res) => {
     const classes = await listStudentClasses(req.user!.id)
     return res.json({ success: true, classes })
+  })
+)
+
+router.get(
+  '/student/:turmaId',
+  requireAuth,
+  requireRole(['aluno']),
+  asyncHandler(async (req, res) => {
+    const turma = await getStudentClass(req.user!.id, Number(req.params.turmaId))
+    if (!turma) return res.status(404).json({ success: false, error: 'Matéria não encontrada.' })
+    return res.json({ success: true, class: turma })
   })
 )
 

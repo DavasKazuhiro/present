@@ -3,7 +3,6 @@
 
 const NAV_ITEMS = [
   { id: 'dashboard',     label: 'Home',      icon: 'fa-solid fa-home' },
-  { id: 'turmas',        label: 'Turmas',    icon: 'fa-solid fa-school' },
   { id: 'calendario',    label: 'Agenda',    icon: 'fa-solid fa-calendar-days' },
   { id: 'configuracoes', label: 'Config',    icon: 'fa-solid fa-gear' },
 ]

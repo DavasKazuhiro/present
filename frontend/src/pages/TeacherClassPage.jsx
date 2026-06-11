@@ -19,26 +19,7 @@ import {
   regenerateInviteLink,
   removeStudent,
 } from '../services/classes.service'
-
-function getCurrentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Seu navegador não permite leitura de localização.'))
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        })
-      },
-      () => reject(new Error('Permita o acesso à localização para abrir a chamada.')),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    )
-  })
-}
+import { getPrecisePosition } from '../utils/geolocation'
 
 const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
@@ -84,6 +65,8 @@ export default function TeacherClassPage() {
           chamadaId: open.id,
           titulo: open.title,
           duracao: open.durationMin,
+          expiresAt: open.expiresAt,
+          secondsLeft: open.secondsLeft,
           present: open.present,
         })
       }
@@ -109,6 +92,8 @@ export default function TeacherClassPage() {
           setActiveAttendance((current) => ({
             ...current,
             present: live.present,
+            expiresAt: live.expiresAt,
+            secondsLeft: live.secondsLeft,
             isOpen: live.isOpen,
           }))
           if (!live.isOpen) {
@@ -132,7 +117,7 @@ export default function TeacherClassPage() {
     setMessage('')
 
     try {
-      const location = await getCurrentPosition()
+      const location = await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 20000 })
       const result = await openAttendance({
         turmaId,
         titulo: dados.titulo,
@@ -152,8 +137,10 @@ export default function TeacherClassPage() {
         ...dados,
         chamadaId: result.session.chamadaId,
         present: 0,
+        expiresAt: result.session.expiresAt,
         latitude: result.session.latitude,
         longitude: result.session.longitude,
+        accuracy: location.accuracy,
       })
       setModal('live')
       await loadClass()
@@ -452,6 +439,7 @@ export default function TeacherClassPage() {
           attendance={{ ...activeAttendance, opening }}
           turma={{ ...turma, enrolledCount: students.length }}
           onClose={handleEndAttendance}
+          onDismiss={() => setModal('none')}
         />
       </div>
     </AppLayout>

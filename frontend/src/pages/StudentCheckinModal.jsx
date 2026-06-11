@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Check, LocateFixed, MapPin, Navigation, ShieldCheck, User, X } from 'lucide-react'
+import { getPrecisePosition } from '../utils/geolocation'
 
 function formatTime(totalSeconds = 0) {
   const safe = Math.max(0, Number(totalSeconds) || 0)
@@ -18,25 +19,6 @@ function distanceMeters(a, b) {
   const lat2 = toRad(b.latitude)
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2
   return Math.round(2 * earth * Math.asin(Math.sqrt(h)))
-}
-
-function getCurrentPosition() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Seu navegador não permite leitura de localização.'))
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) =>
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        }),
-      () => reject(new Error('Permita o acesso à localização para responder a chamada.')),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    )
-  })
 }
 
 function InfoRow({ icon: Icon, label, value, tone = 'default' }) {
@@ -64,6 +46,7 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [secondsLeft, setSecondsLeft] = useState(0)
 
   const distance = useMemo(
     () =>
@@ -74,13 +57,13 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
     [session, location]
   )
   const outOfRange = distance !== null && distance > Number(session?.radiusMeters ?? 0)
-  const timeLeft = formatTime(session?.secondsLeft)
+  const timeLeft = formatTime(secondsLeft)
 
   async function refreshLocation() {
     setLocating(true)
     setError('')
     try {
-      setLocation(await getCurrentPosition())
+      setLocation(await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 20000 }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível ler sua localização.')
     } finally {
@@ -93,14 +76,25 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
       setLocation(null)
       setError('')
       setSuccess('')
+      setSecondsLeft(Number(session?.secondsLeft ?? 0))
       refreshLocation()
     }
+  }, [open, session?.id])
+
+  useEffect(() => {
+    if (!open) return
+
+    const id = setInterval(() => {
+      setSecondsLeft((current) => Math.max(0, current - 1))
+    }, 1000)
+
+    return () => clearInterval(id)
   }, [open, session?.id])
 
   if (!open || !session) return null
 
   async function handleConfirm() {
-    if (!location || outOfRange || session.answered) return
+    if (!location || outOfRange || session.answered || secondsLeft <= 0) return
 
     setSubmitting(true)
     setError('')
@@ -180,6 +174,12 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
             value={distance === null ? 'Aguardando GPS' : `${distance}m de ${session.radiusMeters}m`}
             tone={outOfRange ? 'danger' : 'default'}
           />
+          <InfoRow
+            icon={LocateFixed}
+            label="Precisão"
+            value={location?.accuracy ? `±${location.accuracy}m` : 'Calculando'}
+            tone={location?.accuracy && location.accuracy <= 25 ? 'success' : 'default'}
+          />
           <InfoRow icon={User} label="Professor" value={session.professorName} />
           <InfoRow
             icon={ShieldCheck}
@@ -198,11 +198,11 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
         <div className="space-y-2 p-6 pt-4">
           <button
             onClick={handleConfirm}
-            disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success)}
+            disabled={locating || submitting || !location || outOfRange || session.answered || Boolean(success) || secondsLeft <= 0}
             className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-action-primary text-sm font-semibold text-action-primary-text shadow-card transition hover:bg-action-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Check className="h-4 w-4" />
-            {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : 'Confirmar check-in'}
+            {submitting ? 'Confirmando...' : session.answered || success ? 'Chamada respondida' : secondsLeft <= 0 ? 'Chamada encerrada' : 'Confirmar check-in'}
           </button>
 
           <button

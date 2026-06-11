@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, Clock3, CheckCircle2, XCircle } from 'lucide-react'
+import { BellRing, ChevronLeft, Clock3, CheckCircle2, XCircle } from 'lucide-react'
 
 import { AppLayout } from '../layout/AppLayout/AppLayout'
 import ClassHeader from '../features/classes/ClassHeader'
 
 import {
+  confirmStudentCheckin,
   getClassAttendancesByStudent,
+  getStudentSession,
   getStudentClass,
 } from '../services/classes.service'
+import { StudentCheckinModal } from './StudentCheckinModal'
 
 export default function StudentClassPage() {
   const { id } = useParams()
@@ -21,6 +24,8 @@ export default function StudentClassPage() {
 
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [checkInOpen, setCheckInOpen] = useState(false)
+  const [selectedSession, setSelectedSession] = useState(null)
 
   async function loadClass() {
     setMessage('')
@@ -49,6 +54,26 @@ export default function StudentClassPage() {
   const activeAttendance = attendances.find(
     (attendance) => attendance.isOpen
   )
+
+  async function handleOpenCheckin(chamadaId) {
+    try {
+      const session = await getStudentSession(chamadaId)
+      setSelectedSession(session)
+      setCheckInOpen(true)
+    } catch {
+      setMessage('Esta chamada não está mais disponível.')
+      await loadClass()
+    }
+  }
+
+  async function handleConfirmCheckin(payload) {
+    const result = await confirmStudentCheckin(payload)
+    if (result.success) {
+      await loadClass()
+      setSelectedSession((current) => (current ? { ...current, answered: true } : current))
+    }
+    return result
+  }
 
   if (loading) {
     return (
@@ -114,7 +139,8 @@ export default function StudentClassPage() {
         {/* Painel de chamada ativa */}
         {activeAttendance ? (
           <section className="rounded-lg border border-success-200 bg-success-50 p-5 shadow-card">
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success-100">
                 <Clock3 className="h-6 w-6 text-success-700" />
               </div>
@@ -128,6 +154,15 @@ export default function StudentClassPage() {
                   {activeAttendance.title}
                 </p>
               </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenCheckin(activeAttendance.id)}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-success-700 px-4 text-sm font-semibold text-white transition hover:bg-success-800"
+              >
+                <BellRing className="h-4 w-4" />
+                Responder agora
+              </button>
             </div>
           </section>
         ) : (
@@ -163,7 +198,9 @@ export default function StudentClassPage() {
             <div className="flex flex-col gap-3">
 
               {attendances.map((attendance) => {
-                const responded = attendance.responded
+                const present = Boolean(attendance.present)
+                const responded = Boolean(attendance.responded)
+                const statusLabel = present ? 'Presente' : responded ? 'Ausente' : 'Não respondida'
 
                 return (
                   <div
@@ -180,6 +217,7 @@ export default function StudentClassPage() {
                         {new Date(attendance.createdAt).toLocaleDateString(
                           'pt-BR'
                         )}
+                        {attendance.distanceMeters ? ` · ${Math.round(Number(attendance.distanceMeters))}m do professor` : ''}
                       </p>
                     </div>
 
@@ -187,21 +225,21 @@ export default function StudentClassPage() {
                       className={`
                         inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold
                         ${
-                          responded
+                          present
                             ? 'bg-success-100 text-success-700'
                             : 'bg-danger-100 text-danger-700'
                         }
                       `}
                     >
-                      {responded ? (
+                      {present ? (
                         <>
                           <CheckCircle2 className="h-4 w-4" />
-                          Respondida
+                          {statusLabel}
                         </>
                       ) : (
                         <>
                           <XCircle className="h-4 w-4" />
-                          Não respondida
+                          {statusLabel}
                         </>
                       )}
                     </div>
@@ -211,6 +249,15 @@ export default function StudentClassPage() {
             </div>
           )}
         </section>
+        <StudentCheckinModal
+          open={checkInOpen}
+          session={selectedSession}
+          onClose={() => {
+            setCheckInOpen(false)
+            setSelectedSession(null)
+          }}
+          onConfirm={handleConfirmCheckin}
+        />
       </div>
     </AppLayout>
   )
