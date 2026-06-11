@@ -60,6 +60,7 @@ function mapClass(row: TeacherClassRow, schedules: ClassSchedule[] = []) {
     enrolledCount: Number(row.enrolled_count),
     attendancesDone: Number(row.attendances_done),
     semesterRate: rate,
+    studentRate: rate,
     openSessionId: row.open_session_id,
   }
 }

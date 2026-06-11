@@ -47,7 +47,7 @@ export default function ClassHeader({ info, role }) {
           <div className="flex flex-col items-end border-l border-primary-600 pl-6 max-sm:items-start max-sm:border-l-0 max-sm:border-t max-sm:pl-0 max-sm:pt-4">
             <span className="text-xs font-medium text-primary-200">Minha frequência</span>
             <p className="mt-1 text-5xl font-bold leading-none text-neutral-0">
-              {info.studentRate}
+              {info.studentRate ?? info.semesterRate}
               <span className="text-2xl font-semibold text-primary-300">%</span>
             </p>
             <span className="mt-1 text-xs text-primary-200">no semestre</span>

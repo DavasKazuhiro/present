@@ -63,7 +63,7 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm }) {
     setLocating(true)
     setError('')
     try {
-      setLocation(await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 20000 }))
+      setLocation(await getPrecisePosition({ desiredAccuracy: 20, timeoutMs: 12000 }))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível ler sua localização.')
     } finally {

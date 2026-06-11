@@ -3,7 +3,7 @@ import { X, Radio } from 'lucide-react'
 
 const DURACOES = [7, 10, 15, 20]
 
-export default function NewAttendanceModal({ open, onClose, turma, proximoNumero, onAbrir }) {
+export default function NewAttendanceModal({ open, onClose, turma, proximoNumero, opening = false, onAbrir }) {
   const [titulo, setTitulo] = useState('')
   const [duracao, setDuracao] = useState(7)
   const [raio, setRaio] = useState(20)
@@ -122,10 +122,11 @@ export default function NewAttendanceModal({ open, onClose, turma, proximoNumero
           <button
             type="button"
             onClick={handleAbrir}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary-800 text-[15px] font-semibold text-neutral-0 shadow-card transition hover:bg-primary-900 active:scale-[0.99]"
+            disabled={opening}
+            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-[15px] font-semibold text-neutral-0 shadow-card transition active:scale-[0.99] ${opening ? 'bg-neutral-300' : 'bg-primary-800 hover:bg-primary-900'}`}
           >
             <Radio className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            Abrir chamada
+            {opening ? 'Abrindo chamada...' : 'Abrir chamada'}
           </button>
         </div>
 

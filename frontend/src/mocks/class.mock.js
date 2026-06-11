@@ -8,6 +8,7 @@ export const turmaInfo = {
   enrolledCount: 30,
   attendancesDone: 30,
   semesterRate: 86,
+  studentRate: 86,
 }
 
 export const chamadas = [
