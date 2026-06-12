@@ -2,18 +2,36 @@
 // desktop: sidebar à esquerda + conteúdo
 // mobile: só conteúdo + bottom nav fixa no rodapé
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { LogOut, Settings } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { BottomNav } from '../BottomNav/BottomNav'
-import { getCurrentUser, logout } from '../../services/auth.service'
+import { getCurrentUser, getDashboardPath, logout } from '../../services/auth.service'
+
+const VALID_VIEWS = new Set(['dashboard', 'calendario', 'configuracoes'])
 
 export function AppLayout({ children, calendar }) {
-  const [activeRoute, setActiveRoute] = useState('dashboard')
   const [leaving, setLeaving] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const user = getCurrentUser()
+  const dashboardPath = getDashboardPath(user?.role)
+  const activeRoute = useMemo(() => {
+    const view = new URLSearchParams(location.search).get('view')
+    return VALID_VIEWS.has(view) ? view : 'dashboard'
+  }, [location.search])
+
+  function handleNavigate(route) {
+    if (route === 'dashboard') {
+      navigate(dashboardPath)
+      return
+    }
+
+    if (VALID_VIEWS.has(route)) {
+      navigate(`${dashboardPath}?view=${route}`)
+    }
+  }
 
   async function handleLogout() {
     setLeaving(true)
@@ -24,7 +42,7 @@ export function AppLayout({ children, calendar }) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[#F0F2F0] font-sans text-text-primary">
       {/* sidebar — só aparece no desktop (lg+) */}
-      <Sidebar activeRoute={activeRoute} onNavigate={setActiveRoute} />
+      <Sidebar activeRoute={activeRoute} onNavigate={handleNavigate} />
 
       {/* conteúdo principal — ocupa o resto da tela */}
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto flex flex-col
@@ -82,7 +100,7 @@ export function AppLayout({ children, calendar }) {
       </main>
 
       {/* bottom nav — só aparece no mobile (abaixo de lg) */}
-      <BottomNav activeRoute={activeRoute} onNavigate={setActiveRoute} />
+      <BottomNav activeRoute={activeRoute} onNavigate={handleNavigate} />
     </div>
   )
 }
