@@ -241,8 +241,10 @@ export function StudentCheckinModal({ open, onClose, session, onConfirm, mockDis
               type="button"
               onClick={refreshLocation}
               disabled={locating}
+              aria-busy={locating}
               className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border-default bg-neutral-50 text-sm font-semibold text-text-primary transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <LocateFixed className={`h-4 w-4 ${locating ? 'animate-spin' : ''}`} />
               {locating ? 'Atualizando localização...' : 'Atualizar localização'}
             </button>
 
