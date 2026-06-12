@@ -658,13 +658,15 @@ export async function getAttendanceDetail(input: {
     email: string
     present: number
     answeredAt: string | null
+    distanceMeters: string | number | null
   }>(
     `SELECT
        a.id,
        u.nome AS name,
        u.email,
        CASE WHEN ca.presente = 1 THEN 1 ELSE 0 END AS present,
-       ca.data_resposta AS answeredAt
+       ca.data_resposta AS answeredAt,
+       ca.distancia_metros AS distanceMeters
      FROM turma_alunos ta
      INNER JOIN alunos a ON a.id = ta.aluno_id
      INNER JOIN usuarios u ON u.id = a.usuario_id
