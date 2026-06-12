@@ -18,16 +18,22 @@ function BotaoEmBreve({ icon: Icon, label }) {
   )
 }
 
-export default function ClassActions({ onAbrirChamada }) {
+export default function ClassActions({ onAbrirChamada, hasActiveAttendance = false }) {
   return (
     <section className="grid grid-cols-3 gap-4 max-md:grid-cols-1">
       <button
         type="button"
         onClick={onAbrirChamada}
-        className="group flex flex-col items-center justify-center gap-2 rounded-xl bg-primary-800 px-5 py-7 shadow-card transition hover:bg-primary-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400 active:scale-[0.99]"
+        className={`group flex flex-col items-center justify-center gap-2 rounded-xl px-5 py-7 shadow-card transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 active:scale-[0.99] ${
+          hasActiveAttendance
+            ? 'bg-success-600 hover:bg-success-900 focus-visible:outline-success-400'
+            : 'bg-primary-800 hover:bg-primary-900 focus-visible:outline-primary-400'
+        }`}
       >
         <Radio className="h-6 w-6 text-primary-200 transition group-hover:text-neutral-0" strokeWidth={1.75} />
-        <span className="text-base font-semibold text-neutral-0">Abrir chamada</span>
+        <span className="text-base font-semibold text-neutral-0">
+          {hasActiveAttendance ? 'Chamada ocorrendo' : 'Abrir chamada'}
+        </span>
       </button>
 
       <BotaoEmBreve icon={CalendarClock} label="Programar chamada" />
