@@ -30,6 +30,37 @@ function formatDate(iso) {
   return `${String(d.getDate()).padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`
 }
 
+function formatDateTime(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function csvCell(value) {
+  const text = value == null ? '' : String(value)
+  return `"${text.replace(/"/g, '""')}"`
+}
+
+function csvRow(values) {
+  return values.map(csvCell).join(';')
+}
+
+function sanitizeFilePart(value) {
+  return String(value || 'chamada')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+}
+
 export default function TeacherClassPage() {
   const { id } = useParams()
   const turmaId = Number(id)
@@ -48,6 +79,8 @@ export default function TeacherClassPage() {
   const [savingStudent, setSavingStudent] = useState(false)
   const [opening, setOpening] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('error')
+  const [removingStudentId, setRemovingStudentId] = useState(null)
 
   const proximoNumero = useMemo(() => attendances.length + 1, [attendances.length])
 
@@ -74,8 +107,11 @@ export default function TeacherClassPage() {
           secondsLeft: open.secondsLeft,
           present: open.present,
         })
+      } else {
+        setActiveAttendance(null)
       }
     } catch {
+      setMessageType('error')
       setMessage('Não foi possível carregar esta matéria.')
     } finally {
       setLoading(false)
@@ -119,16 +155,19 @@ export default function TeacherClassPage() {
       return
     }
 
-    async function loadRequests() {
+    async function loadRequests(showLoading = false) {
+      if (showLoading) setLoadingRequests(true)
       try {
         const requests = await getAttendanceRequests(turmaId, activeAttendance.chamadaId)
         setManualRequests(requests)
       } catch (err) {
         console.error('Erro ao carregar solicitações:', err)
+      } finally {
+        if (showLoading) setLoadingRequests(false)
       }
     }
 
-    loadRequests()
+    loadRequests(true)
     const interval = setInterval(loadRequests, 2000)
     return () => clearInterval(interval)
   }, [activeAttendance?.chamadaId, turmaId])
@@ -154,6 +193,7 @@ export default function TeacherClassPage() {
       })
 
       if (!result.success) {
+        setMessageType('error')
         setMessage(result.error)
         return
       }
@@ -170,6 +210,7 @@ export default function TeacherClassPage() {
       setModal('live')
       await loadClass()
     } catch (error) {
+      setMessageType('error')
       setMessage(error instanceof Error ? error.message : 'Não foi possível ler sua localização.')
     } finally {
       setOpening(false)
@@ -218,6 +259,7 @@ export default function TeacherClassPage() {
     setSavingStudent(false)
 
     if (!result.success) {
+      setMessageType('error')
       setMessage(result.error)
       return
     }
@@ -230,6 +272,7 @@ export default function TeacherClassPage() {
     try {
       setInvite(await getInviteLink(turmaId))
     } catch {
+      setMessageType('error')
       setMessage('Não foi possível carregar o convite da matéria.')
     }
   }
@@ -238,6 +281,7 @@ export default function TeacherClassPage() {
     try {
       setInvite(await regenerateInviteLink(turmaId))
     } catch {
+      setMessageType('error')
       setMessage('Não foi possível regenerar o convite.')
     }
   }
@@ -246,50 +290,86 @@ export default function TeacherClassPage() {
     if (!invite?.token) return
     const url = `${window.location.origin}/join/${invite.token}`
     await navigator.clipboard?.writeText(url)
+    setMessageType('success')
     setMessage('Link de convite copiado.')
   }
 
-  async function handleRemoveStudent(alunoId) {
+  async function handleRemoveStudent(alunoId, studentName) {
+    setRemovingStudentId(alunoId)
+    setMessage('')
+
     const result = await removeStudent(turmaId, alunoId)
+
     if (!result.success) {
+      setMessageType('error')
       setMessage(result.error)
+      setRemovingStudentId(null)
       return
     }
+
+    setStudents((current) => current.filter((student) => student.id !== alunoId))
+    setMessageType('success')
+    setMessage(`${studentName || 'Aluno'} removido da matéria.`)
     await loadClass()
+    setMessageType('success')
+    setMessage(`${studentName || 'Aluno'} removido da matéria.`)
+    setRemovingStudentId(null)
   }
 
   async function handleBaixar(attendanceId) {
-  try {
-    const { attendance, students: attendanceStudents } = await getAttendanceDetail(turmaId, attendanceId)
+    try {
+      const { attendance, students: attendanceStudents } = await getAttendanceDetail(turmaId, attendanceId)
 
-    const header = [
-      `Chamada: ${attendance.title}`,
-      `Data: ${formatDate(attendance.date)}`,
-      `Horário: ${attendance.time}`,
-      `Duração: ${attendance.durationMin} min`,
-      `Presença: ${attendance.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%`,
-      `Presentes: ${attendance.present}`,
-      `Ausentes: ${attendance.absent}`,
-      `Conteúdo: ${attendance.content || 'Sem conteúdo informado'}`,
-      '',
-      'Nome,Email,Situação',
-    ].join('\n')
+      const total = attendanceStudents.length
+      const generatedAt = new Date().toLocaleString('pt-BR')
+      const rows = [
+        csvRow(['Relatório de Presença - Present']),
+        csvRow(['Gerado em', generatedAt]),
+        csvRow([]),
+        csvRow(['Dados da chamada']),
+        csvRow(['Matéria', attendance.class?.subject ?? turma?.disciplina ?? turma?.subject ?? '']),
+        csvRow(['Turma', attendance.class?.name ?? turma?.name ?? '']),
+        csvRow(['Curso', attendance.class?.course ?? turma?.course ?? '']),
+        csvRow(['Chamada', attendance.title]),
+        csvRow(['Data', formatDate(attendance.date)]),
+        csvRow(['Horário de abertura', attendance.time]),
+        csvRow(['Duração', `${attendance.durationMin} min`]),
+        csvRow(['Raio configurado', `${attendance.radiusMeters}m`]),
+        csvRow(['Status', attendance.isOpen ? 'Aberta' : 'Encerrada']),
+        csvRow(['Conteúdo', attendance.content || 'Sem conteúdo informado']),
+        csvRow([]),
+        csvRow(['Resumo']),
+        csvRow(['Total de alunos', total]),
+        csvRow(['Presentes', attendance.present]),
+        csvRow(['Ausentes', attendance.absent]),
+        csvRow(['Presença', `${attendance.rate.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}%`]),
+        csvRow([]),
+        csvRow(['Lista de alunos']),
+        csvRow(['#', 'Nome', 'Email', 'Situação', 'Respondido em', 'Distância do professor']),
+        ...attendanceStudents.map((student, index) =>
+          csvRow([
+            index + 1,
+            student.name,
+            student.email,
+            student.present ? 'Presente' : 'Ausente',
+            student.answeredAt ? formatDateTime(student.answeredAt) : '',
+            student.distanceMeters != null ? `${Math.round(Number(student.distanceMeters))}m` : '',
+          ])
+        ),
+      ].join('\n')
 
-    const rows = attendanceStudents
-      .map((s) => `${s.name},${s.email},${s.present ? 'Presente' : 'Ausente'}`)
-      .join('\n')
-
-    const blob = new Blob(['\uFEFF' + `${header}\n${rows}`], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `chamada-${attendance.title}-${attendance.date}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch {
-    setMessage('Não foi possível baixar a lista de presença.')
+      const blob = new Blob(['\uFEFF' + rows], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `presenca-${sanitizeFilePart(attendance.title)}-${attendance.date}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setMessageType('error')
+      setMessage('Não foi possível baixar a lista de presença.')
+    }
   }
-}
 
   const inviteUrl = invite?.token ? `${window.location.origin}/join/${invite.token}` : ''
   const qrUrl = inviteUrl
@@ -341,13 +421,22 @@ export default function TeacherClassPage() {
         </nav>
 
         {message && (
-          <div className="rounded-lg border border-danger-100 bg-danger-50 px-4 py-3 text-sm font-semibold text-danger-600">
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm font-semibold ${
+              messageType === 'success'
+                ? 'border-success-100 bg-success-50 text-success-600'
+                : 'border-danger-100 bg-danger-50 text-danger-600'
+            }`}
+          >
             {message}
           </div>
         )}
 
         <ClassHeader info={{ ...turma, enrolledCount: students.length }} role="teacher"/>
-        <ClassActions onAbrirChamada={handleAbrirChamada} />
+        <ClassActions
+          onAbrirChamada={handleAbrirChamada}
+          hasActiveAttendance={Boolean(activeAttendance?.chamadaId)}
+        />
 
         <section className="grid grid-cols-[0.8fr_1.2fr] gap-4 max-lg:grid-cols-1">
           <div className="rounded-lg border border-border-default bg-bg-card p-5 shadow-card">
@@ -393,18 +482,29 @@ export default function TeacherClassPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2 max-md:grid-cols-1">
                 {students.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between gap-2 rounded-lg border border-border-default px-3 py-2">
+                  <div
+                    key={student.id}
+                    className={`flex items-center justify-between gap-2 rounded-lg border border-border-default px-3 py-2 transition ${
+                      removingStudentId === student.id ? 'bg-neutral-50 opacity-70' : 'bg-bg-card'
+                    }`}
+                  >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-text-primary">{student.name}</p>
                       <p className="truncate text-xs text-text-secondary">{student.email}</p>
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleRemoveStudent(student.id)}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-danger-600 transition hover:bg-danger-50"
+                      onClick={() => handleRemoveStudent(student.id, student.name)}
+                      disabled={removingStudentId === student.id}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-danger-600 transition hover:bg-danger-50 disabled:cursor-not-allowed disabled:opacity-60"
                       aria-label={`Remover ${student.name}`}
+                      title={removingStudentId === student.id ? 'Removendo...' : `Remover ${student.name}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {removingStudentId === student.id ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                 ))}
